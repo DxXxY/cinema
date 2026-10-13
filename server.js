@@ -43,7 +43,7 @@ io.on('connection', socket => {
     room.playing = false; room.time = 0; room.updatedAt = Date.now(); broadcastState(socket.data.roomId);
   });
   socket.on('media:control', (data = {}) => {
-    const room = rooms.get(socket.data.roomId); if (!room?.media || room.media.type !== 'direct') return;
+    const room = rooms.get(socket.data.roomId); if (!room?.media || !['direct', 'embed'].includes(room.media.type)) return;
     if (data.action === 'play') { if (Number.isFinite(data.time)) room.time = Math.max(0, data.time); room.playing = true; room.updatedAt = Date.now(); }
     else if (data.action === 'pause') { room.time = Number.isFinite(data.time) ? Math.max(0, data.time) : currentTime(room); room.playing = false; room.updatedAt = Date.now(); }
     else if (data.action === 'seek') { room.time = Number.isFinite(data.time) ? Math.max(0, data.time) : 0; room.updatedAt = Date.now(); }

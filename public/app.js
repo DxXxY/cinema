@@ -4,7 +4,7 @@ const video = $('video'), embed = $('embed'), empty = $('empty'), errorBox = $('
 let roomId = new URLSearchParams(location.search).get('room') || Math.random().toString(36).slice(2, 10);
 let displayName = localStorage.getItem('tc-name') || `Гость${Math.floor(10 + Math.random() * 90)}`;
 let mode = 'direct', roomState = null, hls = null, applyingRemote = false, voiceEnabled = false, localStream = null;
-let vkPlayer = null, vkReady = false, vkApplyingRemote = false, vkLastControlAt = 0, loadedMediaKey = ''; 
+let vkPlayer = null, vkReady = false, vkApplyingRemote = false, vkLastControlAt = 0, vkLastObservedTime = null, vkLastObservedAt = 0, vkAttachTimer = null, loadedMediaKey = ''; 
 const peers = new Map();
 $('roomId').textContent = roomId; $('displayName').value = displayName;
 function toast(text) { $('hint').textContent = text; clearTimeout(toast.timer); toast.timer = setTimeout(() => $('hint').textContent = '● Плеер готов к запуску', 2600); }
@@ -123,47 +123,89 @@ function makeEmbedUrl(raw) {
   return raw;
 }
 function initVkPlayer() {
-  vkPlayer = null; vkReady = false;
+  vkPlayer = null; vkReady = false; vkLastObservedTime = null; vkLastObservedAt = 0;
+  if (vkAttachTimer) clearInterval(vkAttachTimer);
   const attach = () => {
     try {
-      if (!window.VK?.VideoPlayer || !isVkEmbedUrl(embed.src)) return;
-      vkPlayer = window.VK.VideoPlayer(embed);
-      if (!vkPlayer) return;
-      vkReady = true;
+      if (!embed.isConnected || !isVkEmbedUrl(embed.src)) return false;
+      if (!window.VK?.VideoPlayer) return false;
+      const candidate = window.VK.VideoPlayer(embed);
+      if (!candidate) return false;
+      vkPlayer = candidate; vkReady = true;
+      if (vkAttachTimer) clearInterval(vkAttachTimer); vkAttachTimer = null;
       $('hint').textContent = 'VK Видео подключено — синхронизация доступна';
       if (roomState) syncVkPlayback(roomState);
-      // VK player API events are emitted by the embedded player.
       if (typeof vkPlayer.on === 'function') {
         vkPlayer.on('started', () => sendVkControl('play'));
         vkPlayer.on('resumed', () => sendVkControl('play'));
         vkPlayer.on('paused', () => sendVkControl('pause'));
-        vkPlayer.on('timeupdate', state => {
-          if (!vkApplyingRemote && state && Number.isFinite(Number(state.time))) {
-            const now = Date.now(); if (now - vkLastControlAt > 1800) { vkLastControlAt = now; socket.emit('media:control', { action: 'seek', time: Number(state.time) }); }
+        // timeupdate fires continuously. Compare it with elapsed wall time so ordinary
+        // playback is not mistaken for a seek; only send a command for a real jump.
+        vkPlayer.on('timeupdate', payload => {
+          if (vkApplyingRemote) return;
+          const t = Number(payload?.time ?? payload?.currentTime ?? (typeof payload === 'number' ? payload : NaN));
+          if (!Number.isFinite(t) || t < 0) return;
+          const now = Date.now();
+          if (vkLastObservedTime !== null && vkLastObservedAt) {
+            const elapsed = (now - vkLastObservedAt) / 1000;
+            const delta = t - vkLastObservedTime;
+            // Natural playback should advance about as fast as wall time. A large jump
+            // forward/backward is treated as a user seek.
+            if (Math.abs(delta - elapsed) > 2.5 && now - vkLastControlAt > 700) {
+              vkLastControlAt = now;
+              socket.emit('media:control', { action: 'seek', time: t });
+            }
           }
+          vkLastObservedTime = t; vkLastObservedAt = now;
         });
       }
-    } catch (err) { console.warn('VK Video API init failed', err); $('hint').textContent = 'VK-плеер открыт; API управления недоступно'; }
+      return true;
+    } catch (err) {
+      console.warn('VK Video API init failed', err);
+      return false;
+    }
   };
   embed.addEventListener('load', attach, { once: true });
-  // Covers cases where the iframe load event already fired.
-  setTimeout(attach, 500);
+  // The VK API script can load after the iframe; retry briefly instead of failing silently.
+  attach();
+  if (!vkReady) {
+    let attempts = 0;
+    vkAttachTimer = setInterval(() => {
+      attempts++;
+      if (attach() || attempts >= 30) {
+        if (vkAttachTimer) clearInterval(vkAttachTimer);
+        vkAttachTimer = null;
+        if (!vkReady) $('hint').textContent = 'VK-видео открыто, но API управления не подключилось';
+      }
+    }, 500);
+  }
 }
-function vkTime() { try { const t = vkPlayer?.getCurrentTime?.(); return Number.isFinite(Number(t)) ? Number(t) : 0; } catch { return 0; } }
+function vkTime() {
+  try {
+    const value = vkPlayer?.getCurrentTime?.();
+    const t = Number(value?.time ?? value?.currentTime ?? value);
+    return Number.isFinite(t) && t >= 0 ? t : 0;
+  } catch { return 0; }
+}
 function sendVkControl(action) {
-  if (vkApplyingRemote || !roomState?.media || roomState.media.type !== 'embed' || !isVkEmbedUrl(roomState.media.url)) return;
-  socket.emit('media:control', { action, time: vkTime() });
+  if (vkApplyingRemote || !vkReady || !roomState?.media || roomState.media.type !== 'embed' || !isVkEmbedUrl(roomState.media.url)) return;
+  const time = vkTime();
+  vkLastControlAt = Date.now();
+  vkLastObservedTime = time; vkLastObservedAt = vkLastControlAt;
+  socket.emit('media:control', { action, time });
 }
 function syncVkPlayback(state) {
-  if (!vkPlayer || !vkReady) return;
+  if (!vkPlayer || !vkReady || !state?.media || state.media.type !== 'embed' || !isVkEmbedUrl(state.media.url)) return;
   const target = Math.max(0, Number(state.time) || 0) + (state.playing ? Math.max(0, (Date.now() - (state.updatedAt || Date.now())) / 1000) : 0);
   vkApplyingRemote = true;
   try {
     const current = vkTime();
     if (Number.isFinite(target) && Math.abs(current - target) > 2) vkPlayer.seek?.(target);
     if (state.playing) vkPlayer.play?.(); else vkPlayer.pause?.();
+    vkLastObservedTime = target; vkLastObservedAt = Date.now();
+    $('syncStatus').textContent = state.playing ? 'СМОТРИТЕ ВМЕСТЕ' : 'СИНХРОННО';
   } catch (err) { console.warn('VK sync failed', err); }
-  setTimeout(() => { vkApplyingRemote = false; }, 800);
+  setTimeout(() => { vkApplyingRemote = false; }, 900);
 }
 $('mediaForm').addEventListener('submit', e => {
   e.preventDefault(); const raw = $('mediaUrl').value.trim(); let url;
