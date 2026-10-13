@@ -143,8 +143,8 @@ function initVkPlayer() {
         // playback is not mistaken for a seek; only send a command for a real jump.
         vkPlayer.on('timeupdate', payload => {
           if (vkApplyingRemote) return;
-          const t = Number(payload?.time ?? payload?.currentTime ?? (typeof payload === 'number' ? payload : NaN));
-          if (!Number.isFinite(t) || t < 0) return;
+          const t = normalizeVkTime(payload);
+          if (t === null) return;
           const now = Date.now();
           if (vkLastObservedTime !== null && vkLastObservedAt) {
             const elapsed = (now - vkLastObservedAt) / 1000;
@@ -180,11 +180,31 @@ function initVkPlayer() {
     }, 500);
   }
 }
+function normalizeVkTime(value) {
+  let t = Number(value?.time ?? value?.currentTime ?? value);
+  if (!Number.isFinite(t) || t < 0) return null;
+
+  // VK player APIs usually report seconds, but some wrappers/events can expose
+  // milliseconds. Use duration as a sanity check so a millisecond value is not
+  // interpreted as a seek thousands of seconds into the video.
+  let duration = NaN;
+  try {
+    const d = vkPlayer?.getDuration?.();
+    duration = Number(d?.duration ?? d?.time ?? d);
+  } catch {}
+  if (Number.isFinite(duration) && duration > 0) {
+    if (t > duration + 5 && t / 1000 <= duration + 5) t /= 1000;
+    // Ignore invalid/out-of-range readings instead of broadcasting them; they
+    // can otherwise force every participant to the end of the video.
+    if (t > duration + 5) return null;
+  } else if (t > 24 * 60 * 60) {
+    return null;
+  }
+  return t;
+}
 function vkTime() {
   try {
-    const value = vkPlayer?.getCurrentTime?.();
-    const t = Number(value?.time ?? value?.currentTime ?? value);
-    return Number.isFinite(t) && t >= 0 ? t : 0;
+    return normalizeVkTime(vkPlayer?.getCurrentTime?.()) ?? 0;
   } catch { return 0; }
 }
 function sendVkControl(action) {
@@ -196,7 +216,14 @@ function sendVkControl(action) {
 }
 function syncVkPlayback(state) {
   if (!vkPlayer || !vkReady || !state?.media || state.media.type !== 'embed' || !isVkEmbedUrl(state.media.url)) return;
-  const target = Math.max(0, Number(state.time) || 0) + (state.playing ? Math.max(0, (Date.now() - (state.updatedAt || Date.now())) / 1000) : 0);
+  let target = Math.max(0, Number(state.time) || 0) + (state.playing ? Math.max(0, (Date.now() - (state.updatedAt || Date.now())) / 1000) : 0);
+  const durationRaw = (() => { try { return vkPlayer.getDuration?.(); } catch { return NaN; } })();
+  const duration = Number(durationRaw?.duration ?? durationRaw?.time ?? durationRaw);
+  if (Number.isFinite(duration) && duration > 0 && target > duration + 5) {
+    // Reject stale/corrupt timestamps rather than seeking to the end of the video.
+    target = vkTime();
+    console.warn('Ignored invalid VK sync timestamp outside video duration');
+  }
   vkApplyingRemote = true;
   try {
     const current = vkTime();
