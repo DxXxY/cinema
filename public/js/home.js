@@ -97,6 +97,7 @@ async function renderRecent() {
   }
 }
 
+if (window.tcDesktop) document.body.classList.add('is-desktop'); // inside the Windows app
 initBackground({ activeShare: 0.6, brightness: 1.6, glitchEvery: [2500, 6000] });
 initCreate();
 initJoin();

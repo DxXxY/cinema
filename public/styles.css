@@ -1021,3 +1021,76 @@ label.volume span {
     margin-top: 10px;
   }
 }
+
+/* Windows app (desktop/): app-only controls and the always-on-top mini player */
+.desktop-only,
+.mini-exit {
+  display: none;
+}
+.is-desktop .desktop-only {
+  display: inline-flex;
+}
+.is-desktop .app-only-browser {
+  display: none !important;
+}
+a.button {
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+body.mini-mode {
+  overflow: hidden;
+}
+.mini-mode .topbar,
+.mini-mode .hero,
+.mini-mode .side-column,
+.mini-mode .source-card,
+.mini-mode .invite-card,
+.mini-mode .player-header,
+.mini-mode .player-toolbar,
+.mini-mode .player-footer,
+.mini-mode footer,
+.mini-mode .ambient,
+.mini-mode .bg-canvas,
+.mini-mode .popup {
+  display: none !important;
+}
+body.mini-mode::after {
+  display: none;
+}
+.mini-mode .layout {
+  display: block;
+  max-width: none;
+  padding: 0;
+}
+.mini-mode .player-card {
+  border: 0;
+  border-radius: 0;
+}
+.mini-mode .stage {
+  aspect-ratio: auto;
+  height: 100vh;
+}
+.mini-mode .mini-exit {
+  display: block;
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 3;
+  border: 1px solid #4b4269;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #f3f4fb;
+  background: #12121ecc;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.mini-mode .stage:hover .mini-exit,
+.mini-mode .mini-exit:focus-visible {
+  opacity: 1;
+}
+.button[hidden] {
+  display: none !important;
+}

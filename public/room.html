@@ -18,7 +18,7 @@
 
 <header class="topbar">
   <a class="brand" href="/"><span class="brand-icon">▶</span><span>together<span class="accent">cinema</span></span></a>
-  <div class="top-actions"><i class="live-dot"></i><span class="muted small">КИНОТЕАТР В ЖОПЕ</span><button id="copyTop" class="button quiet">Пригласить ↗</button></div>
+  <div class="top-actions"><i class="live-dot"></i><span class="muted small">КИНОТЕАТР В ЖОПЕ</span><a id="openInApp" class="button quiet app-only-browser" href="#" hidden title="Нужно установленное приложение Together Cinema для Windows">Открыть в приложении</a><button id="copyTop" class="button quiet">Пригласить ↗</button></div>
 </header>
 
 <main class="layout">
@@ -43,6 +43,7 @@
         <iframe id="embed" title="Встроенный видеоплеер" allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowfullscreen hidden></iframe>
         <div id="error" class="error" hidden></div>
         <div id="reactionLayer" class="reaction-layer" aria-hidden="true"></div>
+        <button id="miniExit" class="mini-exit" type="button" title="Вернуть обычное окно">⤢ Развернуть</button>
       </div>
       <div class="player-toolbar">
         <div id="reactions" class="reactions" aria-label="Реакции">
@@ -50,6 +51,7 @@
         </div>
         <div class="toolbar-actions">
           <button id="syncBtn" class="button quiet" type="button" title="Перемотать к общему моменту комнаты">⟳ Синхронизироваться</button>
+          <button id="miniEnter" class="button quiet desktop-only" type="button" title="Маленькое окно поверх всех окон (Ctrl+Alt+O)">▣ Мини-плеер</button>
           <button id="stageFullscreen" class="button quiet" type="button" title="На весь экран вместе с реакциями" aria-label="На весь экран">⛶</button>
         </div>
       </div>

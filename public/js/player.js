@@ -2,7 +2,7 @@
 import { $, setHint, toast, showError, loadScript } from './dom.js';
 import { socket, store } from './state.js';
 import { isVkEmbedUrl } from './embed-url.js';
-import { initVkPlayer, resetVk, isVkReady, syncVkPlayback, getVkPosition } from './vk.js';
+import { initVkPlayer, resetVk, isVkReady, syncVkPlayback, getVkPosition, toggleVkPlayback } from './vk.js';
 
 const HLS_URL = 'https://cdn.jsdelivr.net/npm/hls.js@1.5.20/dist/hls.min.js';
 const video = $('video'), embed = $('embed'), empty = $('empty'), errorBox = $('error');
@@ -102,6 +102,18 @@ function forceSync() {
     else return toast('VK-плеер ещё не подключился');
     toast('⟳ Синхронизировано с комнатой');
   });
+}
+
+// Play/pause from the Windows app hotkey.
+export function togglePlayback() {
+  const media = store.roomState?.media;
+  if (!media) return toast('Сначала запустите видео');
+  if (media.type === 'direct') {
+    if (video.paused) video.play()?.catch?.(() => toast('Нажми Play: браузер заблокировал автозапуск'));
+    else video.pause();
+  } else if (!(isVkEmbedUrl(media.url) && toggleVkPlayback())) {
+    toast('Этот плеер не даёт управлять собой горячей клавишей — нажми паузу в нём');
+  }
 }
 
 // Fullscreen for the whole stage, so reactions stay visible over the video.

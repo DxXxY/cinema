@@ -1,7 +1,7 @@
 // Voice chat relayed through our own server over the existing Socket.IO
 // connection. No WebRTC/TURN: it works wherever the site itself opens.
 // Audio processing lives in voice-worklet.js (16 kHz μ-law, ~128 kbit/s while talking).
-import { $ } from './dom.js';
+import { $, toast } from './dom.js';
 import { socket, store } from './state.js';
 
 const SPEAKING_HOLD_MS = 350;
@@ -109,6 +109,15 @@ export function pruneVoicePeers(users) {
   renderSpeaking();
 }
 
+// Mic on/off: the button in the voice card and the Windows app hotkey.
+export function toggleMute() {
+  if (!enabled) return toast('🎙 Сначала включи голосовую связь');
+  muted = !muted;
+  updateStatus();
+  updateControls();
+  toast(muted ? '🔇 Микрофон выключен' : '🎙 Микрофон включён');
+}
+
 export function initVoice() {
   socket.on('voice:data', (from, chunk) => {
     if (!enabled || !ctx || !(chunk instanceof ArrayBuffer)) return;
@@ -119,7 +128,7 @@ export function initVoice() {
   // initVoice runs after initRoom, so the room is re-joined first.
   socket.on('connect', () => { if (enabled) socket.emit('voice:join'); });
   $('voiceToggle').addEventListener('change', e => { if (e.target.checked) enableVoice(); else disableVoice(); });
-  $('micMute').onclick = () => { muted = !muted; updateStatus(); updateControls(); };
+  $('micMute').onclick = toggleMute;
 
   const slider = $('voiceVolume');
   slider.value = volume;

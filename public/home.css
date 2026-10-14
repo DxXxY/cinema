@@ -384,3 +384,22 @@ a.button {
   .top-actions .button.quiet { display: none; }
   .home-section { padding-top: 56px; }
 }
+
+/* Download button for the Windows app (hidden inside the app itself) */
+.download-win {
+  margin-top: 22px;
+  gap: 10px;
+  padding: 13px 18px;
+  font-size: 13px;
+}
+.download-win small {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.is-desktop .download-win {
+  display: none;
+}
+@media (max-width: 900px) {
+  .download-win { display: none; } /* phones and tablets: the app is Windows-only */
+}

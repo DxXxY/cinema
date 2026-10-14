@@ -10,6 +10,7 @@ import { initReactions } from './reactions.js';
 import { initSubtitles, applySubtitles } from './subtitles.js';
 import { initBackground } from './background.js';
 import { rememberRoom } from './recent.js';
+import { initDesktop } from './desktop.js';
 
 function applyState(state) {
   store.roomState = state;
@@ -49,3 +50,4 @@ initSubtitles();
 initRoom(applyState, onJoined);
 initVoice(); // after initRoom: on reconnect the room is re-joined before voice re-announces
 initBackground();
+initDesktop();

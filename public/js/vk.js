@@ -14,6 +14,13 @@ export const isVkReady = () => !!vkPlayer && vkReady;
 
 export const getVkPosition = () => (isVkReady() ? { time: vkTime(), playing: vkPlaying } : null);
 
+// Play/pause from a hotkey; the player events then sync the room.
+export function toggleVkPlayback() {
+  if (!isVkReady()) return false;
+  if (vkPlaying) vkPlayer.pause?.(); else vkPlayer.play?.();
+  return true;
+}
+
 export function resetVk() {
   vkSession++;
   vkPlayer = null; vkReady = false; vkApplyingRemote = false; vkPlaying = false;
