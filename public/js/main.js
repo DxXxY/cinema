@@ -6,6 +6,7 @@ import { initSourceForm } from './source-form.js';
 import { initChat } from './chat.js';
 import { initVoice, pruneVoicePeers } from './voice.js';
 import { initPositions, renderTimecodes } from './positions.js';
+import { initBackground } from './background.js';
 
 function applyState(state) {
   store.roomState = state;
@@ -22,3 +23,4 @@ initPositions();
 initChat();
 initRoom(applyState);
 initVoice(); // after initRoom: on reconnect the room is re-joined before voice re-announces
+initBackground();

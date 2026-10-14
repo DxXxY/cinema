@@ -805,3 +805,23 @@ footer {
   white-space: normal;
   overflow-wrap: anywhere;
 }
+
+/* Animated background (js/background.js) + scanlines and vignette */
+.bg-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -2;
+  pointer-events: none;
+}
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(to bottom, transparent 0 2px, #0000002e 2px 3px),
+    radial-gradient(ellipse at center, transparent 55%, #000000b0 100%);
+}
