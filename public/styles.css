@@ -718,3 +718,7 @@ footer {
 .stage video:not([hidden]) {
   display: block;
 }
+
+.mic-tag {
+  font-size: 11px;
+}

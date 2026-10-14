@@ -44,6 +44,7 @@ export function renderPeople(users) {
     const avatar = document.createElement('div'); avatar.className = 'avatar'; avatar.textContent = (user.name || '?').slice(0, 1).toUpperCase();
     const name = document.createElement('span'); name.className = 'person-name'; name.textContent = user.name || 'Гость';
     row.append(avatar, name);
+    if (user.voice) { const mic = document.createElement('span'); mic.className = 'mic-tag'; mic.title = 'В голосовой связи'; mic.textContent = '🎙'; row.append(mic); }
     if (user.id === socket.id) { const tag = document.createElement('span'); tag.className = 'you-tag'; tag.textContent = 'ЭТО ТЫ'; row.append(tag); }
     list.append(row);
   }
