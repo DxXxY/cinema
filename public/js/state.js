@@ -14,3 +14,17 @@ export const store = {
   roomState: null,
   joined: false, // true between a successful room:join and a disconnect
 };
+
+// Room playback position. The server's updatedAt is on the server's clock, and
+// a viewer's own clock can be off by hours — so time is counted from the moment
+// this client received the state (stampState), never from updatedAt.
+export function stampState(state) {
+  if (state) state.receivedAt = Date.now();
+  return state;
+}
+
+export function roomTime(state) {
+  if (!state) return 0;
+  const elapsed = state.playing ? Math.max(0, (Date.now() - (state.receivedAt ?? Date.now())) / 1000) : 0;
+  return Math.max(0, Number(state.time) || 0) + elapsed;
+}

@@ -1,6 +1,6 @@
 // VK Video player control through the VK JS API (loaded lazily).
 import { $, setHint, loadScript } from './dom.js';
-import { socket, store } from './state.js';
+import { socket, store, roomTime } from './state.js';
 import { isVkEmbedUrl } from './embed-url.js';
 
 const VK_API_URL = 'https://vk.com/js/api/videoplayer.js';
@@ -199,11 +199,9 @@ function sendVkControl(action, time = vkTime()) {
   socket.emit('media:control', { action, time });
 }
 
-const roomTarget = state => Math.max(0, Number(state.time) || 0) + (state.playing ? Math.max(0, (Date.now() - (state.updatedAt || Date.now())) / 1000) : 0);
-
 export function syncVkPlayback(state, threshold = 2) {
   if (!isVkReady() || vkInAd || state?.media?.type !== 'embed' || !isVkEmbedUrl(state.media.url)) return;
-  let target = roomTarget(state);
+  let target = roomTime(state);
   const duration = vkDuration();
   if (Number.isFinite(duration) && duration > 0 && target > duration + 5) {
     // Reject stale/corrupt timestamps rather than seeking to the end of the video.
@@ -233,7 +231,7 @@ function verifySeek(session, updatedAt, attempt = 1) {
     const state = store.roomState;
     // Give up if the video or the room state changed meanwhile — a newer sync handles it.
     if (session !== vkSession || !isVkReady() || vkInAd || !state || state.updatedAt !== updatedAt) return;
-    const target = roomTarget(state);
+    const target = roomTime(state);
     if (Math.abs(vkTime() - target) <= 4) return;
     vkPendingSeek = { target, at: Date.now(), playing: state.playing };
     vkApplyingRemote = true;

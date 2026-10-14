@@ -1,5 +1,5 @@
 // Entry point: wires the modules together.
-import { socket, store } from './state.js';
+import { socket, store, stampState } from './state.js';
 import { initRoom, renderPeople, renderRoomLock } from './room.js';
 import { initPlayer, applyPlayerState } from './player.js';
 import { initSourceForm, submitMedia } from './source-form.js';
@@ -13,7 +13,7 @@ import { rememberRoom } from './recent.js';
 import { initDesktop } from './desktop.js';
 
 function applyState(state) {
-  store.roomState = state;
+  store.roomState = stampState(state);
   const users = state.users || [];
   renderPeople(users);
   renderTimecodes();

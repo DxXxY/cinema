@@ -1,6 +1,6 @@
 // Video stage: direct files (MP4/WebM/HLS) and embedded players.
 import { $, setHint, toast, showError, loadScript } from './dom.js';
-import { socket, store } from './state.js';
+import { socket, store, stampState, roomTime } from './state.js';
 import { isVkEmbedUrl } from './embed-url.js';
 import { initVkPlayer, resetVk, isVkReady, syncVkPlayback, getVkPosition, toggleVkPlayback } from './vk.js';
 
@@ -74,7 +74,7 @@ async function loadHls(url, mediaKey) {
 }
 
 function syncPlayback(state, threshold = 1.25) {
-  const target = Math.max(0, state.time || 0) + (state.playing ? Math.max(0, (Date.now() - (state.updatedAt || Date.now())) / 1000) : 0);
+  const target = roomTime(state);
   applyingRemote = true;
   if (Number.isFinite(target) && Math.abs(video.currentTime - target) > threshold) { try { video.currentTime = target; } catch {} }
   if (state.playing && video.paused) {
@@ -87,7 +87,7 @@ function syncPlayback(state, threshold = 1.25) {
 // Where the room is right now according to the server state.
 export function expectedRoomTime(state = store.roomState) {
   if (!state?.media) return null;
-  return Math.max(0, state.time || 0) + (state.playing ? Math.max(0, (Date.now() - (state.updatedAt || Date.now())) / 1000) : 0);
+  return state?.media ? roomTime(state) : null;
 }
 
 // "Синхронизироваться": fetch the current room state and jump to it precisely.
@@ -97,6 +97,7 @@ function forceSync() {
   if (media.type === 'embed' && !isVkEmbedUrl(media.url)) return toast('Этот плеер не даёт сайту управлять собой — перемотайте вручную');
   socket.emit('room:sync', {}, state => {
     if (!state?.media) return;
+    stampState(state);
     if (state.media.type === 'direct') syncPlayback(state, 0.3);
     else if (isVkReady()) syncVkPlayback(state, 0.5);
     else return toast('VK-плеер ещё не подключился');
