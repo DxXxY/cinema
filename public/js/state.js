@@ -12,4 +12,5 @@ export const store = {
   roomKey: params.get('key') || '', // invite key of a locked room
   displayName: localStorage.getItem('tc-name') || `Гость${Math.floor(10 + Math.random() * 90)}`,
   roomState: null,
+  joined: false, // true between a successful room:join and a disconnect
 };

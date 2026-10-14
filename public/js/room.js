@@ -10,6 +10,7 @@ export function initRoom(onState, onJoined) {
   const join = () => socket.emit('room:join', { roomId: store.roomId, key: store.roomKey, name: store.displayName }, result => {
     if (result?.error === 'locked') return showLocked();
     if (!result?.ok) return;
+    store.joined = true;
     store.roomId = result.roomId;
     $('roomId').textContent = store.roomId;
     if (result.state) onState(result.state);
@@ -19,7 +20,7 @@ export function initRoom(onState, onJoined) {
   // sees a new socket that is not in any room yet.
   socket.on('connect', () => { setHint('● Подключено к комнате'); join(); });
   if (socket.connected) join();
-  socket.on('disconnect', () => setHint('Связь потеряна — переподключаемся...'));
+  socket.on('disconnect', () => { store.joined = false; setHint('Связь потеряна — переподключаемся...'); });
   socket.on('room:state', onState);
 
   const copyInvite = () => copyText(roomUrl(), 'Ссылка-приглашение скопирована', 'Отправь её другу — и вы окажетесь в одной комнате');
