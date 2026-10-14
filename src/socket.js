@@ -90,7 +90,7 @@ module.exports = function registerSocketHandlers(io) {
       const url = clean(data.url, 2000);
       if (!url) return;
       room.media = { url, type: data.type === 'embed' ? 'embed' : 'direct', title: clean(data.title, 120) || 'Видео' };
-      room.playing = false;
+      room.playing = data.autoplay === true; // a film picked from search starts for everyone at once
       room.time = 0;
       room.updatedAt = Date.now();
       room.positions.clear();

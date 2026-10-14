@@ -36,8 +36,8 @@
       </div>
       <div id="stage" class="stage">
         <div id="empty" class="empty">
-          <div class="orb">▶</div><h3>Время выбрать фильм</h3><p>Вставь ссылку на VK Видео, YouTube, Twitch или файл .mp4 — фильм запустится у всех в комнате.</p>
-          <form id="emptyForm" class="empty-form"><input id="emptyUrl" type="url" placeholder="Ссылка на видео" aria-label="Ссылка на видео" required><button class="button primary" type="submit">Запустить ↗</button></form>
+          <div class="orb">▶</div><h3>Время выбрать фильм</h3><p>Напиши название фильма — найдём его в VK Видео. Или вставь ссылку на VK, YouTube, Twitch или файл .mp4. Фильм запустится у всех в комнате.</p>
+          <form id="emptyForm" class="empty-form"><input id="emptyUrl" type="text" placeholder="Название фильма или ссылка" aria-label="Название фильма или ссылка" autocomplete="off" spellcheck="false" required><button class="button primary" type="submit">Найти ↗</button></form>
         </div>
         <video id="video" controls playsinline preload="metadata" hidden></video>
         <iframe id="embed" title="Встроенный видеоплеер" allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowfullscreen hidden></iframe>
@@ -63,10 +63,10 @@
         <div><div class="label">ИСТОЧНИК ВИДЕО</div><h2>Добавить фильм</h2></div>
       </div>
       <form id="mediaForm">
-        <label for="mediaUrl">ССЫЛКА НА ВИДЕО</label>
-        <div class="input-row"><input id="mediaUrl" type="url" placeholder="Ссылка на VK Видео, YouTube, Twitch или файл .mp4" required><button class="button primary" type="submit">Запустить ↗</button></div>
-        <p id="sourceNote" class="note">Вставь обычную ссылку на ролик VK Видео, YouTube или Twitch — сайт сам откроет нужный плеер. Прямые файлы MP4, WebM и HLS (.m3u8) тоже подходят.</p>
-        <label for="mediaTitle">НАЗВАНИЕ (НЕОБЯЗАТЕЛЬНО)</label>
+        <label for="mediaUrl">НАЗВАНИЕ ФИЛЬМА ИЛИ ССЫЛКА</label>
+        <div class="input-row"><input id="mediaUrl" type="text" placeholder="Например, Интерстеллар — или ссылка на VK, YouTube, Twitch, .mp4" autocomplete="off" spellcheck="false" required><button class="button primary" type="submit">Найти ↗</button></div>
+        <p id="sourceNote" class="note">Начни писать название — появятся фильмы из VK Видео, выбери нужный, и он запустится у всех. Или вставь ссылку на ролик VK Видео, YouTube, Twitch или файл MP4, WebM, HLS (.m3u8).</p>
+        <label for="mediaTitle">НАЗВАНИЕ ДЛЯ ССЫЛКИ (НЕОБЯЗАТЕЛЬНО)</label>
         <input id="mediaTitle" maxlength="120" placeholder="Например, Интерстеллар">
       </form>
       <div class="label subs-label">СУБТИТРЫ ДЛЯ ПРЯМОГО ВИДЕО (.SRT / .VTT)</div>

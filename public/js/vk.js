@@ -73,8 +73,15 @@ function startAttach(session) {
 }
 
 function bindVkEvents() {
-  vkPlayer.on('started', () => { vkPlaying = true; sendVkControl('play'); });
-  vkPlayer.on('resumed', () => { vkPlaying = true; sendVkControl('play'); });
+  const onStart = () => {
+    vkPlaying = true;
+    // The room is already playing (e.g. the browser blocked autoplay of a film picked
+    // from search and this viewer pressed Play late): catch up instead of rewinding everyone.
+    if (!vkApplyingRemote && store.roomState?.playing) return syncVkPlayback(store.roomState);
+    sendVkControl('play');
+  };
+  vkPlayer.on('started', onStart);
+  vkPlayer.on('resumed', onStart);
   vkPlayer.on('paused', () => { vkPlaying = false; sendVkControl('pause'); });
   // timeupdate fires continuously. Compare it with elapsed wall time so ordinary
   // playback is not mistaken for a seek; only send a command for a real jump.

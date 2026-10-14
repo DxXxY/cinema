@@ -6,6 +6,7 @@ const { Readable } = require('stream');
 const { Server } = require('socket.io');
 const registerSocketHandlers = require('./src/socket');
 const { rooms } = require('./src/rooms');
+const { searchVkVideo } = require('./src/vk-search');
 
 const PORT = process.env.PORT || 3000;
 const PUBLIC = path.join(__dirname, 'public');
@@ -24,6 +25,18 @@ app.get(['/room', '/room/:id'], (_req, res) => res.sendFile(path.join(PUBLIC, 'r
 app.use(express.static(PUBLIC));
 // Lightweight endpoint for Render health checks and uptime pingers.
 app.get('/health', (_req, res) => res.send('ok'));
+
+// Film search by title for the room's "film or link" field (VK Video only for now).
+app.get('/api/search', async (req, res) => {
+  const q = String(req.query.q || '').trim().slice(0, 100);
+  if (q.length < 2) return res.json({ results: [] });
+  try {
+    res.json({ results: await searchVkVideo(q) });
+  } catch (err) {
+    console.warn('VK search failed:', err.message);
+    res.status(502).json({ error: 'search_failed' });
+  }
+});
 
 // Windows installer served from our own address. The file lives in the latest
 // GitHub release (GitHub doesn't accept 100+ MB files in the repo itself);
