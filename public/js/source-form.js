@@ -1,34 +1,25 @@
-// "Добавить фильм" form: source mode switch and URL submission.
+// "Добавить фильм" form: one URL field, the source type is detected automatically.
 import { $, toast } from './dom.js';
 import { socket } from './state.js';
 import { isVkEmbedUrl, makeEmbedUrl } from './embed-url.js';
 
-let mode = 'direct';
-
-function setMode(next) {
-  mode = next;
-  $('directMode').classList.toggle('active', mode === 'direct');
-  $('embedMode').classList.toggle('active', mode === 'embed');
-  $('mediaUrl').placeholder = mode === 'direct' ? 'https://example.com/movie.mp4' : 'Ссылка на VK Видео, YouTube или Twitch';
-  $('sourceNote').textContent = mode === 'direct'
-    ? 'Прямые MP4, WebM и HLS (.m3u8). Для них работает синхронизация воспроизведения.'
-    : 'Вставь обычную ссылку на VK Видео, YouTube или Twitch — сайт попробует открыть оригинальный плеер. Некоторые видео запрещают встраивание.';
-}
+// Links to video files (MP4/WebM/HLS...) play in our own player with sync and subtitles;
+// everything else (VK, YouTube, Twitch, other players) opens as an embed.
+const DIRECT_FILE = /\.(mp4|m4v|webm|ogv|ogg|mov|m3u8)$/i;
 
 export function initSourceForm() {
-  $('directMode').onclick = () => setMode('direct');
-  $('embedMode').onclick = () => setMode('embed');
   $('mediaForm').addEventListener('submit', e => {
     e.preventDefault();
     const raw = $('mediaUrl').value.trim();
-    let url;
+    let parsed;
     try {
-      const parsed = new URL(raw);
+      parsed = new URL(raw);
       if (!['http:', 'https:'].includes(parsed.protocol)) throw Error();
-      url = mode === 'embed' ? makeEmbedUrl(raw) : raw;
     } catch { return toast('Введи корректную ссылку с http:// или https://'); }
-    socket.emit('media:set', { url, type: mode, title: $('mediaTitle').value.trim() || 'Видео' });
-    if (mode === 'embed' && isVkEmbedUrl(url) && !new URL(url).searchParams.has('hash')) {
+    const type = DIRECT_FILE.test(parsed.pathname) ? 'direct' : 'embed';
+    const url = type === 'embed' ? makeEmbedUrl(raw) : raw;
+    socket.emit('media:set', { url, type, title: $('mediaTitle').value.trim() || 'Видео' });
+    if (type === 'embed' && isVkEmbedUrl(url) && !new URL(url).searchParams.has('hash')) {
       toast('Если VK не откроется, возьми код через «Поделиться → Встроить»: некоторым роликам нужен hash');
     }
   });
