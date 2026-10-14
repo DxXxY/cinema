@@ -73,15 +73,43 @@ async function loadHls(url, mediaKey) {
   hls.on(Hls.Events.ERROR, (_e, data) => { if (data.fatal) showError('Не удалось загрузить HLS-поток. Проверьте ссылку и доступ к источнику.'); });
 }
 
-function syncPlayback(state) {
+function syncPlayback(state, threshold = 1.25) {
   const target = Math.max(0, state.time || 0) + (state.playing ? Math.max(0, (Date.now() - (state.updatedAt || Date.now())) / 1000) : 0);
   applyingRemote = true;
-  if (Number.isFinite(target) && Math.abs(video.currentTime - target) > 1.25) { try { video.currentTime = target; } catch {} }
+  if (Number.isFinite(target) && Math.abs(video.currentTime - target) > threshold) { try { video.currentTime = target; } catch {} }
   if (state.playing && video.paused) {
     video.play()?.catch?.(() => toast('Нажми Play: браузер заблокировал автозапуск'));
   } else if (!state.playing && !video.paused) video.pause();
   $('syncStatus').textContent = state.playing ? 'СМОТРИТЕ ВМЕСТЕ' : 'СИНХРОННО';
   setTimeout(() => { applyingRemote = false; }, 250);
+}
+
+// Where the room is right now according to the server state.
+export function expectedRoomTime(state = store.roomState) {
+  if (!state?.media) return null;
+  return Math.max(0, state.time || 0) + (state.playing ? Math.max(0, (Date.now() - (state.updatedAt || Date.now())) / 1000) : 0);
+}
+
+// "Синхронизироваться": fetch the current room state and jump to it precisely.
+function forceSync() {
+  const media = store.roomState?.media;
+  if (!media) return toast('Сначала запустите видео');
+  if (media.type === 'embed' && !isVkEmbedUrl(media.url)) return toast('Этот плеер не даёт сайту управлять собой — перемотайте вручную');
+  socket.emit('room:sync', {}, state => {
+    if (!state?.media) return;
+    if (state.media.type === 'direct') syncPlayback(state, 0.3);
+    else if (isVkReady()) syncVkPlayback(state, 0.5);
+    else return toast('VK-плеер ещё не подключился');
+    toast('⟳ Синхронизировано с комнатой');
+  });
+}
+
+// Fullscreen for the whole stage, so reactions stay visible over the video.
+function toggleStageFullscreen() {
+  const stage = $('stage');
+  if (document.fullscreenElement) document.exitFullscreen?.();
+  else if (stage.requestFullscreen) stage.requestFullscreen().catch(() => toast('Браузер не разрешил полноэкранный режим'));
+  else video.webkitEnterFullscreen?.(); // iPhone Safari: only the video itself can go fullscreen
 }
 
 function sendControl(action) {
@@ -90,6 +118,8 @@ function sendControl(action) {
 }
 
 export function initPlayer() {
+  $('syncBtn').onclick = forceSync;
+  $('stageFullscreen').onclick = toggleStageFullscreen;
   video.addEventListener('play', () => sendControl('play'));
   video.addEventListener('pause', () => sendControl('pause'));
   video.addEventListener('seeked', () => sendControl('seek'));

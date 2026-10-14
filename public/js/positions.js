@@ -1,8 +1,9 @@
 // Playback timecodes next to participant names.
 // Every client reports its position every 2 s; between reports the display
 // ticks forward locally for those who are playing.
+import { $ } from './dom.js';
 import { socket, store } from './state.js';
-import { getLocalPosition } from './player.js';
+import { getLocalPosition, expectedRoomTime } from './player.js';
 
 const REPORT_MS = 2000;
 const OUT_OF_SYNC_SEC = 3;
@@ -32,6 +33,16 @@ export function renderTimecodes() {
     el.classList.toggle('out-of-sync', off);
     el.title = off ? `Расходится с тобой на ${Math.round(Math.abs(t - mine))} с` : 'Позиция в видео';
   }
+  // Pulse the sync button when this viewer drifted away from the room.
+  const local = getLocalPosition(), expected = expectedRoomTime();
+  $('syncBtn').classList.toggle('attention', !!local && expected !== null && Math.abs(local.time - expected) > OUT_OF_SYNC_SEC);
+}
+
+export function setPositions(list = []) {
+  const now = Date.now();
+  positions.clear();
+  for (const p of list) positions.set(p.id, { time: p.time, playing: p.playing, at: now });
+  renderTimecodes();
 }
 
 function report() {
@@ -40,12 +51,7 @@ function report() {
 }
 
 export function initPositions() {
-  socket.on('room:positions', list => {
-    const now = Date.now();
-    positions.clear();
-    for (const p of list) positions.set(p.id, { time: p.time, playing: p.playing, at: now });
-    renderTimecodes();
-  });
+  socket.on('room:positions', setPositions);
   setInterval(report, REPORT_MS);
   setInterval(renderTimecodes, 1000);
 }

@@ -1,17 +1,18 @@
-// Room membership, participants list, name and invite links.
+// Room membership, participants list, name, invite links and room lock.
 import { $, toast, setHint, showPopup } from './dom.js';
 import { socket, store } from './state.js';
 
-export function initRoom(onState) {
+export function initRoom(onState, onJoined) {
   $('roomId').textContent = store.roomId;
   $('displayName').value = store.displayName;
 
-  const join = () => socket.emit('room:join', { roomId: store.roomId, name: store.displayName }, result => {
+  const join = () => socket.emit('room:join', { roomId: store.roomId, key: store.roomKey, name: store.displayName }, result => {
+    if (result?.error === 'locked') return showLocked();
     if (!result?.ok) return;
     store.roomId = result.roomId;
     $('roomId').textContent = store.roomId;
-    history.replaceState({}, '', roomUrl());
     if (result.state) onState(result.state);
+    onJoined(result);
   });
   // Re-join on every (re)connect: after a dropped connection the server
   // sees a new socket that is not in any room yet.
@@ -23,13 +24,32 @@ export function initRoom(onState) {
   const copyInvite = () => copyText(roomUrl(), 'Ссылка-приглашение скопирована', 'Отправь её другу — и вы окажетесь в одной комнате');
   $('copyRoom').onclick = copyInvite;
   $('copyTop').onclick = copyInvite;
-  $('copyId').onclick = () => copyText(store.roomId, 'ID комнаты скопирован', 'Его можно вставить в адрес: ?room=' + store.roomId);
+  $('copyId').onclick = () => store.roomKey
+    ? copyInvite() // a locked room can't be entered by ID alone
+    : copyText(store.roomId, 'ID комнаты скопирован', 'Его можно вставить в адрес: ?room=' + store.roomId);
+  $('lockRoom').onclick = () => socket.emit('room:lock', { locked: !store.roomState?.locked });
   $('saveName').onclick = () => {
     store.displayName = $('displayName').value.trim().slice(0, 24) || 'Гость';
     $('displayName').value = store.displayName;
     localStorage.setItem('tc-name', store.displayName);
     socket.emit('room:rename', { name: store.displayName }, r => { if (r?.ok) toast('Имя сохранено'); });
   };
+}
+
+function showLocked() {
+  setHint('Комната закрыта');
+  $('empty').querySelector('h3').textContent = 'Комната закрыта 🔒';
+  $('empty').querySelector('p').textContent = 'Попроси у участников свежую ссылку-приглашение — по старой ссылке или ID сюда не попасть.';
+  showPopup({ title: 'Комната закрыта', detail: 'Нужна ссылка-приглашение от участников комнаты', error: true });
+}
+
+// Lock button and the invite key in the address bar.
+export function renderRoomLock(state) {
+  store.roomKey = state.key || '';
+  history.replaceState({}, '', roomUrl());
+  $('lockRoom').textContent = state.locked ? '🔓 Открыть комнату' : '🔒 Закрыть комнату';
+  $('lockRoom').classList.toggle('locked', !!state.locked);
+  $('lockNote').textContent = state.locked ? 'Зайти можно только по ссылке-приглашению' : 'Зайти может любой, у кого есть ссылка или ID';
 }
 
 export function renderPeople(users) {
@@ -41,7 +61,7 @@ export function renderPeople(users) {
     return list.append(e);
   }
   for (const user of users) {
-    const row = document.createElement('div'); row.className = 'person';
+    const row = document.createElement('div'); row.className = 'person'; row.dataset.id = user.id;
     const avatar = document.createElement('div'); avatar.className = 'avatar'; avatar.textContent = (user.name || '?').slice(0, 1).toUpperCase();
     const name = document.createElement('span'); name.className = 'person-name'; name.textContent = user.name || 'Гость';
     row.append(avatar, name);
@@ -55,6 +75,7 @@ export function renderPeople(users) {
 function roomUrl() {
   const url = new URL(location.href);
   url.searchParams.set('room', store.roomId);
+  if (store.roomKey) url.searchParams.set('key', store.roomKey); else url.searchParams.delete('key');
   return url.toString();
 }
 

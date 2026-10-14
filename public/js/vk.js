@@ -124,7 +124,7 @@ function sendVkControl(action) {
   socket.emit('media:control', { action, time });
 }
 
-export function syncVkPlayback(state) {
+export function syncVkPlayback(state, threshold = 2) {
   if (!isVkReady() || state?.media?.type !== 'embed' || !isVkEmbedUrl(state.media.url)) return;
   let target = Math.max(0, Number(state.time) || 0) + (state.playing ? Math.max(0, (Date.now() - (state.updatedAt || Date.now())) / 1000) : 0);
   const duration = vkDuration();
@@ -135,7 +135,7 @@ export function syncVkPlayback(state) {
   }
   vkApplyingRemote = true;
   try {
-    if (Number.isFinite(target) && Math.abs(vkTime() - target) > 2) vkPlayer.seek?.(target);
+    if (Number.isFinite(target) && Math.abs(vkTime() - target) > threshold) vkPlayer.seek?.(target);
     if (state.playing) vkPlayer.play?.(); else vkPlayer.pause?.();
     vkPlaying = state.playing;
     vkLastObservedTime = target; vkLastObservedAt = Date.now();
