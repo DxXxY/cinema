@@ -58,6 +58,7 @@ function createWindow(startUrl, hidden) {
   win = new BrowserWindow({
     width: 1280, height: 860, minWidth: 360, minHeight: 240,
     show: !hidden, backgroundColor: '#090a12', title: 'Together Cinema', icon: appIcon,
+    frame: false, // own title bar, drawn by preload.js
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, sandbox: true },
   });
   win.loadURL(startUrl);
@@ -72,7 +73,9 @@ function createWindow(startUrl, hidden) {
     if (!isMainFrame || code === -3) return; // -3: navigation aborted by us
     win.loadFile(path.join(__dirname, 'assets', 'offline.html'), { query: { url: isSiteUrl(url) ? url : SITE } });
   });
-  win.webContents.on('did-navigate-in-page', updateTitle);
+  win.webContents.on('did-navigate-in-page', () => { updateTitle(); sendWindowState(); });
+  win.webContents.on('did-navigate', sendWindowState);
+  for (const event of ['maximize', 'unmaximize', 'enter-full-screen', 'leave-full-screen']) win.on(event, sendWindowState);
   win.on('page-title-updated', e => { e.preventDefault(); updateTitle(); });
 
   // Closing the window keeps the app in the tray; "Выход" in the tray quits.
@@ -82,6 +85,13 @@ function createWindow(startUrl, hidden) {
     win.hide();
     if (!trayHintShown) { trayHintShown = true; notify('Together Cinema работает в трее', 'Голос и уведомления продолжают работать. Выйти — через иконку в трее.'); }
   });
+}
+
+function windowState() {
+  return { maximized: !!win?.isMaximized(), mini, canGoBack: !!win?.webContents.navigationHistory.canGoBack() };
+}
+function sendWindowState() {
+  if (win && !win.isDestroyed()) win.webContents.send('tc:window-state', windowState());
 }
 
 function updateTitle() {
@@ -105,6 +115,7 @@ function setMini(on) {
     if (normalBounds) win.setBounds(normalBounds);
   }
   win.webContents.send('tc:mini', on);
+  sendWindowState();
   updateTitle();
   updateTrayMenu();
   showWindow();
@@ -166,6 +177,21 @@ function setupIpc() {
     win.flashFrame(true);
   });
   ipcMain.on('tc:set-mini', (e, on) => { if (fromSite(e)) setMini(!!on); });
+  // Title bar buttons (preload.js). Also allowed from the local offline page.
+  ipcMain.handle('tc:window-state', () => windowState());
+  ipcMain.on('tc:window', (_e, action) => {
+    if (!win) return;
+    const history = win.webContents.navigationHistory;
+    switch (action) {
+      case 'minimize': win.minimize(); break;
+      case 'maximize': if (win.isMaximized()) win.unmaximize(); else win.maximize(); break;
+      case 'close': win.close(); break; // hides to the tray, see the 'close' handler
+      case 'back': if (history.canGoBack()) history.goBack(); break;
+      case 'home': win.loadURL(SITE); break;
+      case 'mini': setMini(true); break;
+      case 'unmini': setMini(false); break;
+    }
+  });
   win.on('focus', () => win.flashFrame(false));
 }
 

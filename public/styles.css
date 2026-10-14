@@ -1094,3 +1094,33 @@ body.mini-mode::after {
 .button[hidden] {
   display: none !important;
 }
+
+/* Scrollbars in the site palette. Chrome ignores ::-webkit-scrollbar styles
+   once scrollbar-color is set, so the standard property is for Firefox only. */
+@supports not selector(::-webkit-scrollbar) {
+  html {
+    scrollbar-color: #3b3456 transparent;
+  }
+}
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #2a2840;
+  border: 3px solid transparent;
+  border-radius: 10px;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #5a4b8e;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-corner,
+::-webkit-scrollbar-button {
+  display: none;
+  background: transparent;
+}

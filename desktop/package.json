@@ -1,7 +1,7 @@
 {
   "name": "together-cinema-desktop",
   "productName": "Together Cinema",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Together Cinema для Windows: совместный просмотр, трей, уведомления, мини-плеер и горячие клавиши",
   "author": "DxXxY",
   "license": "UNLICENSED",
@@ -49,7 +49,9 @@
     "protocols": [
       {
         "name": "Together Cinema",
-        "schemes": ["togethercinema"]
+        "schemes": [
+          "togethercinema"
+        ]
       }
     ],
     "publish": [
