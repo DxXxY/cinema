@@ -15,7 +15,8 @@ function buildSequence() {
 const SEQ = buildSequence();
 const rand = (a, b) => a + Math.random() * (b - a);
 
-export function initBackground() {
+// Options let the home page use a brighter, busier variant.
+export function initBackground({ activeShare = ACTIVE_SHARE, brightness = 1, glitchEvery = [4000, 9000] } = {}) {
   const canvas = document.createElement('canvas');
   canvas.className = 'bg-canvas';
   canvas.setAttribute('aria-hidden', 'true');
@@ -24,10 +25,10 @@ export function initBackground() {
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   let w = 0, h = 0, dpr = 1, rows = 0, columns = [], lines = [];
-  let glitchUntil = 0, nextGlitch = performance.now() + rand(3000, 7000);
+  let glitchUntil = 0, nextGlitch = performance.now() + rand(glitchEvery[0] * 0.7, glitchEvery[1] * 0.8);
 
   const newStream = (col, fromTop) => {
-    col.active = Math.random() < ACTIVE_SHARE;
+    col.active = Math.random() < activeShare;
     col.head = fromTop ? -rand(0, 25) : rand(0, rows);
     col.speed = rand(2, 6.5);          // rows per second
     col.len = Math.floor(rand(8, 24));
@@ -58,8 +59,8 @@ export function initBackground() {
         let ch = SEQ[(col.offset + r) % SEQ.length];
         if (ch === ' ') continue;
         if (glitching && Math.random() < 0.15) ch = String(Math.floor(Math.random() * 10));
-        if (k === 0) { ctx.fillStyle = PINK; ctx.globalAlpha = 0.55; }
-        else { ctx.fillStyle = PURPLE; ctx.globalAlpha = 0.28 * (1 - k / col.len); }
+        if (k === 0) { ctx.fillStyle = PINK; ctx.globalAlpha = Math.min(1, 0.55 * brightness); }
+        else { ctx.fillStyle = PURPLE; ctx.globalAlpha = Math.min(1, 0.28 * brightness) * (1 - k / col.len); }
         ctx.fillText(ch, x, r * CELL);
       }
     });
@@ -114,7 +115,7 @@ export function initBackground() {
     frameTimer = now;
     const dt = Math.min(0.1, (now - last) / 1000);
     last = now;
-    if (now > nextGlitch) { glitchUntil = now + rand(120, 320); nextGlitch = now + rand(4000, 9000); }
+    if (now > nextGlitch) { glitchUntil = now + rand(120, 320); nextGlitch = now + rand(glitchEvery[0], glitchEvery[1]); }
     const glitching = now < glitchUntil;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, w, h);

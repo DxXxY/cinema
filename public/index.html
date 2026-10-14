@@ -4,120 +4,107 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#090a12">
+  <meta name="description" content="Смотрите фильмы вместе на расстоянии: синхронное видео с YouTube, VK и Twitch, чат, реакции и голосовая связь без VPN.">
   <title>Together Cinema — смотрите вместе</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap">
   <link rel="stylesheet" href="/styles.css">
-  <!-- Deferred: the page renders first, then scripts run in order. -->
-  <script src="/socket.io/socket.io.min.js" defer></script>
-  <script type="module" src="/js/main.js"></script>
+  <link rel="stylesheet" href="/home.css">
+  <script type="module" src="/js/home.js"></script>
 </head>
-<body>
+<body class="home-page">
 <div class="ambient a1"></div><div class="ambient a2"></div>
 
 <header class="topbar">
   <a class="brand" href="/"><span class="brand-icon">▶</span><span>together<span class="accent">cinema</span></span></a>
-  <div class="top-actions"><i class="live-dot"></i><span class="muted small">КИНОТЕАТР В ЖОПЕ</span><button id="copyTop" class="button quiet">Пригласить ↗</button></div>
+  <nav class="top-actions">
+    <a class="button quiet" href="#join">Войти по ID</a>
+    <a class="button primary" href="#create">Создать комнату</a>
+  </nav>
 </header>
 
-<main class="layout">
-  <section class="main-column">
-    <div class="hero">
-      <div class="eyebrow">— ВАШ ЛИЧНЫЙ ОНЛАЙН-КИНОТЕАТР</div>
-      <h1>Владик<br><span>Любит Дианочку</span></h1>
-      <p>Привет соси жопа</p>
+<main class="home">
+  <section class="home-hero">
+    <div class="eyebrow">— ОНЛАЙН-КИНОТЕАТР ДЛЯ СОВМЕСТНЫХ ВЕЧЕРОВ</div>
+    <h1 class="home-title"><span class="glitch plain" data-text="Кино лучше,">Кино лучше,</span><br><span class="glitch" data-text="когда вы вместе.">когда вы вместе.</span></h1>
+    <p class="home-lead">Together Cinema — сайт, чтобы смотреть фильмы вместе, даже если вы в разных городах. Включаете видео с YouTube, VK, Twitch или по прямой ссылке — и оно идёт у всех синхронно: пауза у одного — пауза у всех. Рядом общий чат, реакции и голосовая связь без VPN.</p>
+    <div class="hero-chips">
+      <span>✦ Без регистрации</span><span>✦ Бесплатно</span><span>✦ Прямо в браузере</span><span>✦ Телефон и компьютер</span>
     </div>
+  </section>
 
-    <section class="panel player-card">
-      <div class="player-header">
-        <div><div class="label">СЕЙЧАС В КИНО</div><h2 id="currentTitle">Выберите видео</h2></div>
-        <span class="pill"><i class="live-dot"></i><span id="syncStatus">ОЖИДАНИЕ</span></span>
-      </div>
-      <div id="stage" class="stage">
-        <div id="empty" class="empty"><div class="orb">▶</div><h3>Время выбрать фильм</h3><p>Добавьте ссылку на VK Видео, YouTube, Twitch или прямой видеофайл.</p></div>
-        <video id="video" controls playsinline preload="metadata" hidden></video>
-        <iframe id="embed" title="Встроенный видеоплеер" allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowfullscreen hidden></iframe>
-        <div id="error" class="error" hidden></div>
-        <div id="reactionLayer" class="reaction-layer" aria-hidden="true"></div>
-      </div>
-      <div class="player-toolbar">
-        <div id="reactions" class="reactions" aria-label="Реакции">
-          <button type="button" data-emoji="❤️">❤️</button><button type="button" data-emoji="😂">😂</button><button type="button" data-emoji="😱">😱</button><button type="button" data-emoji="🔥">🔥</button><button type="button" data-emoji="😭">😭</button><button type="button" data-emoji="👏">👏</button>
-        </div>
-        <div class="toolbar-actions">
-          <button id="syncBtn" class="button quiet" type="button" title="Перемотать к общему моменту комнаты">⟳ Синхронизироваться</button>
-          <button id="stageFullscreen" class="button quiet" type="button" title="На весь экран вместе с реакциями" aria-label="На весь экран">⛶</button>
-        </div>
-      </div>
-      <div class="player-footer"><span id="hint">● Плеер готов к запуску</span><span class="muted small">СИНХРОНИЗАЦИЯ В РЕАЛЬНОМ ВРЕМЕНИ</span></div>
-    </section>
-
-    <section class="panel source-card">
-      <div class="section-heading">
-        <div><div class="label">ИСТОЧНИК ВИДЕО</div><h2>Добавить фильм</h2></div>
-      </div>
-      <form id="mediaForm">
-        <label for="mediaUrl">ССЫЛКА НА ВИДЕО</label>
-        <div class="input-row"><input id="mediaUrl" type="url" placeholder="Ссылка на VK Видео, YouTube, Twitch или файл .mp4" required><button class="button primary" type="submit">Запустить ↗</button></div>
-        <p id="sourceNote" class="note">Вставь обычную ссылку на ролик VK Видео, YouTube или Twitch — сайт сам откроет нужный плеер. Прямые файлы MP4, WebM и HLS (.m3u8) тоже подходят.</p>
-        <label for="mediaTitle">НАЗВАНИЕ (НЕОБЯЗАТЕЛЬНО)</label>
-        <input id="mediaTitle" maxlength="120" placeholder="Например, Интерстеллар">
+  <section class="home-actions">
+    <section id="create" class="panel action-card create-card">
+      <div class="label">НОВАЯ КОМНАТА</div>
+      <h2>Создать комнату</h2>
+      <form id="createForm" novalidate>
+        <label for="createName">ТВОЁ ИМЯ</label>
+        <input id="createName" maxlength="24" placeholder="Как тебя называть?" autocomplete="nickname">
+        <label for="createUrl">ССЫЛКА НА ФИЛЬМ <span class="optional">НЕОБЯЗАТЕЛЬНО</span></label>
+        <input id="createUrl" type="url" placeholder="VK Видео, YouTube, Twitch или файл .mp4">
+        <label for="createTitle">НАЗВАНИЕ <span class="optional">НЕОБЯЗАТЕЛЬНО</span></label>
+        <input id="createTitle" maxlength="120" placeholder="Например, Интерстеллар">
+        <label class="check" for="createLock">
+          <input id="createLock" type="checkbox">
+          <span class="check-box" aria-hidden="true"></span>
+          <span><strong>🔒 Закрытая комната</strong><small>Войти можно только по ссылке-приглашению, по ID — нельзя</small></span>
+        </label>
+        <p id="createError" class="form-error" hidden></p>
+        <button class="button primary big" type="submit">Создать комнату ↗</button>
       </form>
-      <div class="label subs-label">СУБТИТРЫ ДЛЯ ПРЯМОГО ВИДЕО (.SRT / .VTT)</div>
-      <div class="subs-row">
-        <label class="button quiet file-button">Загрузить файл<input id="subsFile" type="file" accept=".srt,.vtt,text/vtt" hidden></label>
-        <span id="subsName" class="subs-name">Нет субтитров</span>
-        <button id="subsClear" class="button quiet" type="button" hidden>Убрать</button>
-      </div>
     </section>
 
-    <section class="panel invite-card">
-      <div class="invite-icon">↗</div>
-      <div class="invite-copy"><h3>Позови кого-нибудь на сеанс</h3><p>Отправь ссылку — и вы окажетесь в одной комнате.</p></div>
-      <button id="copyRoom" class="button outline">Копировать ссылку</button>
+    <section id="join" class="panel action-card join-card">
+      <div class="label">УЖЕ ПОЗВАЛИ?</div>
+      <h2>Войти в комнату</h2>
+      <form id="joinForm" novalidate>
+        <label for="joinInput">ID КОМНАТЫ ИЛИ ССЫЛКА-ПРИГЛАШЕНИЕ</label>
+        <div class="input-row"><input id="joinInput" placeholder="k7m2xq9p4a или ссылка" autocomplete="off" spellcheck="false"><button class="button primary" type="submit">Войти ↗</button></div>
+        <p id="joinNote" class="note">ID есть в комнате под надписью «ID комнаты». В закрытую комнату — только по ссылке-приглашению.</p>
+      </form>
+      <div id="recentBlock" class="recent" hidden>
+        <div class="label">НЕДАВНИЕ КОМНАТЫ</div>
+        <ul id="recentList" class="recent-list"></ul>
+      </div>
     </section>
   </section>
 
-  <aside class="side-column">
-    <section class="panel room-card">
-      <div class="side-heading">
-        <div><div class="label">ВАШЕ ПРОСТРАНСТВО</div><h2>Комната</h2></div>
-        <span class="muted small"><i class="live-dot"></i> <span id="roomCount">1</span> В СЕТИ</span>
-      </div>
-      <div class="room-id"><span class="label">ID КОМНАТЫ</span><div><code id="roomId">...</code><button id="copyId" class="icon-button" title="Копировать ID">▣</button></div></div>
-      <div class="lock-row"><button id="lockRoom" class="button quiet" type="button">🔒 Закрыть комнату</button><span id="lockNote" class="lock-note">Зайти может любой, у кого есть ссылка или ID</span></div>
-      <label for="displayName">ТВОЁ ИМЯ</label>
-      <div class="input-row"><input id="displayName" maxlength="24" placeholder="Как тебя называть?"><button id="saveName" class="button quiet" type="button">Сохранить</button></div>
-      <div class="label people-label">УЧАСТНИКИ</div>
-      <div id="people" class="people"></div>
-    </section>
+  <section id="features" class="home-section">
+    <div class="eyebrow">— ВОЗМОЖНОСТИ</div>
+    <h2 class="section-title">Всё для совместного вечера</h2>
+    <div class="feature-grid">
+      <article class="panel feature"><div class="feature-icon">▶</div><h3>Синхронный просмотр</h3><p>Play, пауза и перемотка у одного — сразу у всех. Возле ников видно, кто на какой минуте, а кнопка «Синхронизироваться» догоняет комнату.</p></article>
+      <article class="panel feature"><div class="feature-icon">♫</div><h3>Голос без VPN</h3><p>Голосовая связь идёт через сервер сайта, поэтому работает там, где обычные звонки режут. Можно выключить микрофон и сделать собеседника тише.</p></article>
+      <article class="panel feature"><div class="feature-icon">✳</div><h3>Чат и реакции</h3><p>Переписка рядом с фильмом и эмодзи, которые всплывают прямо поверх видео. История чата не пропадает после перезагрузки.</p></article>
+      <article class="panel feature"><div class="feature-icon">⧉</div><h3>Любые источники</h3><p>VK Видео, YouTube, Twitch — обычной ссылкой. А ещё прямые файлы MP4 и WebM и HLS-потоки .m3u8.</p></article>
+      <article class="panel feature"><div class="feature-icon">CC</div><h3>Субтитры</h3><p>Загрузи .srt или .vtt к прямому видео — субтитры увидят все в комнате. Русские файлы в любой кодировке.</p></article>
+      <article class="panel feature"><div class="feature-icon">🔒</div><h3>Закрытые комнаты</h3><p>Одна кнопка — и войти можно только по ссылке-приглашению. Случайные гости по ID не попадут.</p></article>
+    </div>
+  </section>
 
-    <section class="panel chat-card">
-      <div class="side-heading">
-        <div><div class="label">НЕ ОТВЛЕКАЯСЬ ОТ ФИЛЬМА</div><h2>Общий чат <span class="pink">✳</span></h2></div>
-        <span class="chat-live">LIVE</span>
-      </div>
-      <div id="messages" class="messages"><div class="system-message">Комната создана. Отправь первое сообщение 👋</div></div>
-      <form id="chatForm" class="chat-form"><input id="chatInput" maxlength="500" placeholder="Напиши что-нибудь..." autocomplete="off"><button class="send" type="submit" aria-label="Отправить">↑</button></form>
-      <div class="chat-foot">Будьте добры друг к другу <span>♥</span></div>
-    </section>
+  <section class="home-section">
+    <div class="eyebrow">— КАК ЭТО РАБОТАЕТ</div>
+    <h2 class="section-title">Три шага до сеанса</h2>
+    <ol class="steps">
+      <li class="panel step"><span class="step-num">01</span><h3>Создай комнату</h3><p>Впиши имя и, если хочешь, сразу вставь ссылку на фильм.</p></li>
+      <li class="panel step"><span class="step-num">02</span><h3>Отправь приглашение</h3><p>Нажми «Пригласить» — ссылка скопируется. Скинь её другу в любой мессенджер.</p></li>
+      <li class="panel step"><span class="step-num">03</span><h3>Смотрите вместе</h3><p>Видео идёт синхронно у всех. Включайте голос, пишите в чат, кидайте реакции.</p></li>
+    </ol>
+  </section>
 
-    <section class="panel voice-card">
-      <div class="voice-top">
-        <div class="voice-icon">♫</div>
-        <div class="voice-copy"><h3>Голосовая связь</h3><p>Общайтесь во время просмотра</p></div>
-        <label class="switch"><input id="voiceToggle" type="checkbox"><span></span></label>
-      </div>
-      <div id="voiceStatus" class="voice-status">Выключена</div>
-      <div class="voice-controls">
-        <button id="micMute" class="button quiet" type="button" disabled>🎙 Микрофон включён</button>
-        <label class="volume" title="Громкость собеседников">🔊<input id="voiceVolume" type="range" min="0" max="200" step="5" value="100" aria-label="Громкость собеседников"><span id="voiceVolumeValue">100%</span></label>
-      </div>
-      <p class="note">Голос идёт через сервер сайта — VPN не нужен. Лучше в наушниках, чтобы звук фильма не попадал в микрофон.</p>
-    </section>
-    <div class="privacy">✦ Без регистрации. Без лишних шагов. Просто кино.</div>
-  </aside>
+  <section class="home-section faq-section">
+    <div class="eyebrow">— ВОПРОСЫ И ОТВЕТЫ</div>
+    <h2 class="section-title">Частые вопросы</h2>
+    <div class="faq">
+      <details class="panel"><summary>Нужна ли регистрация?</summary><p>Нет. Создаёшь комнату, отправляешь ссылку — и всё. Имя можно поменять прямо в комнате.</p></details>
+      <details class="panel"><summary>Какие ссылки подходят?</summary><p>Обычные ссылки на ролики VK Видео, YouTube и Twitch, а также прямые ссылки на файлы .mp4, .webm и HLS-потоки .m3u8. Сайт сам определяет, какой плеер открыть. Точнее всего синхронизируются прямые файлы и VK.</p></details>
+      <details class="panel"><summary>Нужен ли VPN?</summary><p>Для сайта, чата и голоса — нет, они работают через наш сервер. Но само видео грузится с сервиса-источника: если, например, YouTube у тебя открывается только через VPN, то и в комнате будет так же.</p></details>
+      <details class="panel"><summary>Почему VK-видео не открывается?</summary><p>Некоторые ролики VK запрещают встраивание на другие сайты или требуют специальный ключ. Помогает ссылка из «Поделиться → Встроить» под видео в VK.</p></details>
+      <details class="panel"><summary>Что будет, если закрыть вкладку?</summary><p>Комната с фильмом и чатом живёт ещё 10 минут после ухода последнего участника — можно спокойно перезагрузить страницу или переподключиться.</p></details>
+      <details class="panel"><summary>Работает ли на телефоне?</summary><p>Да, в обычном браузере. Для голосовой связи разреши доступ к микрофону, а лучше подключи наушники — тогда звук фильма не попадёт в микрофон.</p></details>
+    </div>
+  </section>
 </main>
 
 <footer><span>TOGETHER CINEMA</span><span>СОЗДАНО ДЛЯ СОВМЕСТНЫХ ВЕЧЕРОВ</span></footer>

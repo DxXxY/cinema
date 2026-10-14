@@ -1,6 +1,7 @@
 // Room membership, participants list, name, invite links and room lock.
 import { $, toast, setHint, showPopup } from './dom.js';
 import { socket, store } from './state.js';
+import { roomPath } from './ids.js';
 
 export function initRoom(onState, onJoined) {
   $('roomId').textContent = store.roomId;
@@ -26,7 +27,7 @@ export function initRoom(onState, onJoined) {
   $('copyTop').onclick = copyInvite;
   $('copyId').onclick = () => store.roomKey
     ? copyInvite() // a locked room can't be entered by ID alone
-    : copyText(store.roomId, 'ID комнаты скопирован', 'Его можно вставить в адрес: ?room=' + store.roomId);
+    : copyText(store.roomId, 'ID комнаты скопирован', 'Друг вводит его на главной в поле «Войти в комнату»');
   $('lockRoom').onclick = () => socket.emit('room:lock', { locked: !store.roomState?.locked });
   $('saveName').onclick = () => {
     store.displayName = $('displayName').value.trim().slice(0, 24) || 'Гость';
@@ -73,10 +74,7 @@ export function renderPeople(users) {
 }
 
 function roomUrl() {
-  const url = new URL(location.href);
-  url.searchParams.set('room', store.roomId);
-  if (store.roomKey) url.searchParams.set('key', store.roomKey); else url.searchParams.delete('key');
-  return url.toString();
+  return new URL(roomPath(store.roomId, store.roomKey), location.origin).toString();
 }
 
 async function copyText(text, title, detail) {

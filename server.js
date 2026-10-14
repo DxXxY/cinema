@@ -4,16 +4,35 @@ const http = require('http');
 const path = require('path');
 const { Server } = require('socket.io');
 const registerSocketHandlers = require('./src/socket');
+const { rooms } = require('./src/rooms');
 
 const PORT = process.env.PORT || 3000;
+const PUBLIC = path.join(__dirname, 'public');
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { maxHttpBufferSize: 1.5e6 }); // room for subtitle files
 
 app.use(compression());
-app.use(express.static(path.join(__dirname, 'public')));
+// Old invite links (/?room=abc&key=...) now lead to /room/abc?key=...
+app.get('/', (req, res, next) => {
+  if (!req.query.room) return next();
+  const key = req.query.key ? `?key=${encodeURIComponent(req.query.key)}` : '';
+  res.redirect(302, `/room/${encodeURIComponent(req.query.room)}${key}`);
+});
+app.get(['/room', '/room/:id'], (_req, res) => res.sendFile(path.join(PUBLIC, 'room.html')));
+app.use(express.static(PUBLIC));
 // Lightweight endpoint for Render health checks and uptime pingers.
 app.get('/health', (_req, res) => res.send('ok'));
+
+// Room status for the home page (join form, recent rooms). The title of a locked
+// room is shown only to someone who has its invite key.
+app.get('/api/rooms/:id', (req, res) => {
+  const room = rooms.get(req.params.id);
+  res.set('Cache-Control', 'no-store');
+  if (!room) return res.json({ exists: false });
+  const allowed = !room.key || req.query.key === room.key;
+  res.json({ exists: true, locked: !!room.key, allowed, users: room.users.size, title: allowed ? room.media?.title || null : null });
+});
 
 registerSocketHandlers(io);
 
