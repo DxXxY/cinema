@@ -30,6 +30,7 @@ module.exports = function registerSocketHandlers(io) {
     if (!user) return;
     socket.data.voice = on;
     user.voice = on;
+    user.opus = on && !!socket.data.opus;
     if (on) socket.join(voiceRoom(socket.data.roomId)); else socket.leave(voiceRoom(socket.data.roomId));
     broadcastState(socket.data.roomId);
   }
@@ -55,7 +56,7 @@ module.exports = function registerSocketHandlers(io) {
       const room = getRoom(id);
       socket.data.roomId = id;
       socket.data.name = name;
-      room.users.set(socket.id, { id: socket.id, name, voice: !!socket.data.voice });
+      room.users.set(socket.id, { id: socket.id, name, voice: !!socket.data.voice, opus: !!socket.data.voice && !!socket.data.opus });
       socket.join(id);
       broadcastState(id);
       ack({ ok: true, roomId: id, state: snapshot(room), messages: room.messages, positions: [...room.positions.values()] });
@@ -159,7 +160,9 @@ module.exports = function registerSocketHandlers(io) {
     });
 
     // Voice chat: audio frames are relayed only to room members with voice on.
-    socket.on('voice:join', () => setVoice(socket, true));
+    // `opus` says this client can encode and decode Opus; others then send it Opus
+    // instead of the fallback 16 kHz μ-law frames.
+    socket.on('voice:join', (data = {}) => { socket.data.opus = data?.opus === true; setVoice(socket, true); });
     socket.on('voice:leave', () => setVoice(socket, false));
     socket.on('voice:data', chunk => {
       const id = socket.data.roomId;
