@@ -4,7 +4,7 @@ const rooms = new Map();
 const clean = (v, max = 500) => String(v ?? '').replace(/[<>]/g, '').trim().slice(0, max);
 
 function getRoom(id) {
-  if (!rooms.has(id)) rooms.set(id, { users: new Map(), media: null, playing: false, time: 0, updatedAt: Date.now() });
+  if (!rooms.has(id)) rooms.set(id, { users: new Map(), positions: new Map(), media: null, playing: false, time: 0, updatedAt: Date.now() });
   return rooms.get(id);
 }
 
@@ -21,6 +21,7 @@ function removeUser(id, socketId) {
   const room = rooms.get(id);
   if (!room) return;
   room.users.delete(socketId);
+  room.positions.delete(socketId);
   if (!room.users.size) rooms.delete(id);
 }
 

@@ -9,6 +9,29 @@ export function toast(text) {
   toastTimer = setTimeout(() => setHint('● Плеер готов к запуску'), 2600);
 }
 
+// Small popup at the bottom of the screen (e.g. after copying the invite link).
+let popupTimer;
+export function showPopup({ title, detail = '', value = '', error = false }) {
+  let el = $('popup');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'popup'; el.className = 'popup'; el.setAttribute('role', 'status');
+    el.innerHTML = '<div class="popup-icon"></div><div class="popup-body"><strong></strong><span></span><code></code></div>';
+    el.onclick = () => el.classList.remove('show');
+    document.body.append(el);
+  }
+  el.classList.toggle('error', error);
+  el.querySelector('.popup-icon').textContent = error ? '!' : '✓';
+  el.querySelector('strong').textContent = title;
+  el.querySelector('span').textContent = detail;
+  el.querySelector('code').textContent = value;
+  el.classList.remove('show');
+  void el.offsetWidth; // restart the animation when shown again
+  el.classList.add('show');
+  clearTimeout(popupTimer);
+  popupTimer = setTimeout(() => el.classList.remove('show'), error ? 8000 : 3000);
+}
+
 export function showError(message) {
   const box = $('error');
   box.textContent = message;

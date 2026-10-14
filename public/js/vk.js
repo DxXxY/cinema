@@ -8,13 +8,15 @@ const embed = $('embed');
 
 let vkPlayer = null, vkReady = false, vkApplyingRemote = false;
 let vkLastControlAt = 0, vkLastObservedTime = null, vkLastObservedAt = 0;
-let vkAttachTimer = null, vkSession = 0;
+let vkAttachTimer = null, vkSession = 0, vkPlaying = false;
 
 export const isVkReady = () => !!vkPlayer && vkReady;
 
+export const getVkPosition = () => (isVkReady() ? { time: vkTime(), playing: vkPlaying } : null);
+
 export function resetVk() {
   vkSession++;
-  vkPlayer = null; vkReady = false; vkApplyingRemote = false;
+  vkPlayer = null; vkReady = false; vkApplyingRemote = false; vkPlaying = false;
   vkLastObservedTime = null; vkLastObservedAt = 0;
   if (vkAttachTimer) clearInterval(vkAttachTimer);
   vkAttachTimer = null;
@@ -64,9 +66,9 @@ function startAttach(session) {
 }
 
 function bindVkEvents() {
-  vkPlayer.on('started', () => sendVkControl('play'));
-  vkPlayer.on('resumed', () => sendVkControl('play'));
-  vkPlayer.on('paused', () => sendVkControl('pause'));
+  vkPlayer.on('started', () => { vkPlaying = true; sendVkControl('play'); });
+  vkPlayer.on('resumed', () => { vkPlaying = true; sendVkControl('play'); });
+  vkPlayer.on('paused', () => { vkPlaying = false; sendVkControl('pause'); });
   // timeupdate fires continuously. Compare it with elapsed wall time so ordinary
   // playback is not mistaken for a seek; only send a command for a real jump.
   vkPlayer.on('timeupdate', payload => {
@@ -135,6 +137,7 @@ export function syncVkPlayback(state) {
   try {
     if (Number.isFinite(target) && Math.abs(vkTime() - target) > 2) vkPlayer.seek?.(target);
     if (state.playing) vkPlayer.play?.(); else vkPlayer.pause?.();
+    vkPlaying = state.playing;
     vkLastObservedTime = target; vkLastObservedAt = Date.now();
     $('syncStatus').textContent = state.playing ? 'СМОТРИТЕ ВМЕСТЕ' : 'СИНХРОННО';
   } catch (err) { console.warn('VK sync failed', err); }

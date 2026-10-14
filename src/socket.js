@@ -61,7 +61,9 @@ module.exports = function registerSocketHandlers(io) {
       room.playing = false;
       room.time = 0;
       room.updatedAt = Date.now();
+      room.positions.clear();
       broadcastState(socket.data.roomId);
+      io.to(socket.data.roomId).emit('room:positions', []);
     });
 
     socket.on('media:control', (data = {}) => {
@@ -79,6 +81,16 @@ module.exports = function registerSocketHandlers(io) {
       } else return;
       room.updatedAt = Date.now();
       broadcastState(socket.data.roomId);
+    });
+
+    // Each client reports its own playback position; shown next to participant names.
+    socket.on('media:position', (data = {}) => {
+      const id = socket.data.roomId;
+      const room = rooms.get(id);
+      if (!room?.media || !room.users.has(socket.id)) return;
+      if (!Number.isFinite(data.time) || data.time < 0 || data.time > 1e6) return;
+      room.positions.set(socket.id, { id: socket.id, time: data.time, playing: !!data.playing });
+      io.to(id).emit('room:positions', [...room.positions.values()]);
     });
 
     socket.on('chat:send', (data = {}) => {

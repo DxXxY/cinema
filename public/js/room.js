@@ -1,5 +1,5 @@
 // Room membership, participants list, name and invite links.
-import { $, toast, setHint } from './dom.js';
+import { $, toast, setHint, showPopup } from './dom.js';
 import { socket, store } from './state.js';
 
 export function initRoom(onState) {
@@ -20,9 +20,10 @@ export function initRoom(onState) {
   socket.on('disconnect', () => setHint('Связь потеряна — переподключаемся...'));
   socket.on('room:state', onState);
 
-  $('copyRoom').onclick = () => copyText(roomUrl());
-  $('copyTop').onclick = () => copyText(roomUrl());
-  $('copyId').onclick = () => copyText(store.roomId);
+  const copyInvite = () => copyText(roomUrl(), 'Ссылка-приглашение скопирована', 'Отправь её другу — и вы окажетесь в одной комнате');
+  $('copyRoom').onclick = copyInvite;
+  $('copyTop').onclick = copyInvite;
+  $('copyId').onclick = () => copyText(store.roomId, 'ID комнаты скопирован', 'Его можно вставить в адрес: ?room=' + store.roomId);
   $('saveName').onclick = () => {
     store.displayName = $('displayName').value.trim().slice(0, 24) || 'Гость';
     $('displayName').value = store.displayName;
@@ -44,6 +45,7 @@ export function renderPeople(users) {
     const avatar = document.createElement('div'); avatar.className = 'avatar'; avatar.textContent = (user.name || '?').slice(0, 1).toUpperCase();
     const name = document.createElement('span'); name.className = 'person-name'; name.textContent = user.name || 'Гость';
     row.append(avatar, name);
+    const timecode = document.createElement('span'); timecode.className = 'timecode'; timecode.dataset.id = user.id; timecode.hidden = true; row.append(timecode);
     if (user.voice) { const mic = document.createElement('span'); mic.className = 'mic-tag'; mic.title = 'В голосовой связи'; mic.textContent = '🎙'; row.append(mic); }
     if (user.id === socket.id) { const tag = document.createElement('span'); tag.className = 'you-tag'; tag.textContent = 'ЭТО ТЫ'; row.append(tag); }
     list.append(row);
@@ -56,15 +58,19 @@ function roomUrl() {
   return url.toString();
 }
 
-function copyText(text) {
-  if (navigator.clipboard?.writeText) navigator.clipboard.writeText(text).then(() => toast('Скопировано!')).catch(() => fallbackCopy(text));
-  else fallbackCopy(text);
+async function copyText(text, title, detail) {
+  let ok = false;
+  try { await navigator.clipboard.writeText(text); ok = true; } catch { ok = fallbackCopy(text); }
+  if (ok) showPopup({ title, detail, value: text });
+  else showPopup({ title: 'Не получилось скопировать', detail: 'Выдели и скопируй вручную:', value: text, error: true });
 }
 
 function fallbackCopy(text) {
   const area = document.createElement('textarea');
   area.value = text; area.style.position = 'fixed'; area.style.opacity = '0';
   document.body.append(area); area.select();
-  try { document.execCommand('copy'); toast('Скопировано!'); } catch { toast('Не получилось скопировать'); }
+  let ok = false;
+  try { ok = document.execCommand('copy'); } catch {}
   area.remove();
+  return ok;
 }

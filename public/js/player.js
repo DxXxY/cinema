@@ -2,7 +2,7 @@
 import { $, setHint, toast, showError, loadScript } from './dom.js';
 import { socket, store } from './state.js';
 import { isVkEmbedUrl } from './embed-url.js';
-import { initVkPlayer, resetVk, isVkReady, syncVkPlayback } from './vk.js';
+import { initVkPlayer, resetVk, isVkReady, syncVkPlayback, getVkPosition } from './vk.js';
 
 const HLS_URL = 'https://cdn.jsdelivr.net/npm/hls.js@1.5.20/dist/hls.min.js';
 const video = $('video'), embed = $('embed'), empty = $('empty'), errorBox = $('error');
@@ -20,6 +20,15 @@ export function applyPlayerState(state) {
   }
   if (state.media?.type === 'direct' && video.src) syncPlayback(state);
   if (state.media?.type === 'embed' && isVkEmbedUrl(state.media.url) && isVkReady()) syncVkPlayback(state);
+}
+
+// This viewer's own playback position, or null when it can't be read
+// (YouTube/Twitch embeds don't expose it).
+export function getLocalPosition() {
+  const media = store.roomState?.media;
+  if (!media) return null;
+  if (media.type === 'direct') return video.src && Number.isFinite(video.currentTime) ? { time: video.currentTime, playing: !video.paused } : null;
+  return isVkEmbedUrl(media.url) ? getVkPosition() : null;
 }
 
 function clearPlayer() {
