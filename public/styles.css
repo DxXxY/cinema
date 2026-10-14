@@ -993,3 +993,31 @@ label.volume span {
   .toolbar-actions { width: 100%; }
   #syncBtn { flex: 1; }
 }
+
+/* Link field inside the empty player of a new room */
+.empty-form {
+  display: flex;
+  gap: 8px;
+  width: min(460px, 100%);
+  margin: 18px auto 0;
+}
+.empty-form[hidden] {
+  display: none;
+}
+.empty-form input {
+  border-color: #4b4269;
+  background: #0b0d16e6;
+}
+@media (max-width: 520px) {
+  .empty .orb,
+  .empty p {
+    display: none;
+  }
+  .empty h3 {
+    margin: 0 0 4px;
+    font-size: 14px;
+  }
+  .empty-form {
+    margin-top: 10px;
+  }
+}

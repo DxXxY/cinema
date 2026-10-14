@@ -41,6 +41,7 @@ function showLocked() {
   setHint('Комната закрыта');
   $('empty').querySelector('h3').textContent = 'Комната закрыта 🔒';
   $('empty').querySelector('p').textContent = 'Попроси у участников свежую ссылку-приглашение — по старой ссылке или ID сюда не попасть.';
+  $('emptyForm').hidden = true;
   showPopup({ title: 'Комната закрыта', detail: 'Нужна ссылка-приглашение от участников комнаты', error: true });
 }
 

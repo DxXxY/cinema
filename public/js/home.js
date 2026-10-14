@@ -42,13 +42,11 @@ function initCreate() {
   $('createForm').addEventListener('submit', e => {
     e.preventDefault();
     const name = $('createName').value.trim().slice(0, 24);
-    const url = $('createUrl').value.trim();
-    if (url && !isHttpUrl(url)) return setNote($('createError'), 'Ссылка на фильм должна начинаться с http:// или https:// — или оставь поле пустым.', true);
     const roomId = randomId();
     try {
       if (name) localStorage.setItem('tc-name', name);
-      // The room page reads this once after joining: sets the video and locks the room.
-      sessionStorage.setItem('tc-new-room', JSON.stringify({ roomId, url, title: $('createTitle').value.trim(), lock: $('createLock').checked }));
+      // The room page reads this once after joining and locks the room.
+      if ($('createLock').checked) sessionStorage.setItem('tc-new-room', JSON.stringify({ roomId, lock: true }));
     } catch {}
     location.href = roomPath(roomId);
   });

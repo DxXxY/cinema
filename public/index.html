@@ -20,7 +20,7 @@
   <a class="brand" href="/"><span class="brand-icon">▶</span><span>together<span class="accent">cinema</span></span></a>
   <nav class="top-actions">
     <a class="button quiet" href="#join">Войти по ID</a>
-    <a class="button primary" href="#create">Создать комнату</a>
+    <a class="button primary" href="/room/" title="Сразу создать новую пустую комнату">Создать комнату</a>
   </nav>
 </header>
 
@@ -41,17 +41,13 @@
       <form id="createForm" novalidate>
         <label for="createName">ТВОЁ ИМЯ</label>
         <input id="createName" maxlength="24" placeholder="Как тебя называть?" autocomplete="nickname">
-        <label for="createUrl">ССЫЛКА НА ФИЛЬМ <span class="optional">НЕОБЯЗАТЕЛЬНО</span></label>
-        <input id="createUrl" type="url" placeholder="VK Видео, YouTube, Twitch или файл .mp4">
-        <label for="createTitle">НАЗВАНИЕ <span class="optional">НЕОБЯЗАТЕЛЬНО</span></label>
-        <input id="createTitle" maxlength="120" placeholder="Например, Интерстеллар">
         <label class="check" for="createLock">
           <input id="createLock" type="checkbox">
           <span class="check-box" aria-hidden="true"></span>
           <span><strong>🔒 Закрытая комната</strong><small>Войти можно только по ссылке-приглашению, по ID — нельзя</small></span>
         </label>
-        <p id="createError" class="form-error" hidden></p>
         <button class="button primary big" type="submit">Создать комнату ↗</button>
+        <p class="note create-note">Фильм выберешь уже в комнате — просто вставь ссылку в плеер.</p>
       </form>
     </section>
 
@@ -87,7 +83,7 @@
     <div class="eyebrow">— КАК ЭТО РАБОТАЕТ</div>
     <h2 class="section-title">Три шага до сеанса</h2>
     <ol class="steps">
-      <li class="panel step"><span class="step-num">01</span><h3>Создай комнату</h3><p>Впиши имя и, если хочешь, сразу вставь ссылку на фильм.</p></li>
+      <li class="panel step"><span class="step-num">01</span><h3>Создай комнату</h3><p>Одна кнопка — и комната готова. Вставь в плеер ссылку на фильм.</p></li>
       <li class="panel step"><span class="step-num">02</span><h3>Отправь приглашение</h3><p>Нажми «Пригласить» — ссылка скопируется. Скинь её другу в любой мессенджер.</p></li>
       <li class="panel step"><span class="step-num">03</span><h3>Смотрите вместе</h3><p>Видео идёт синхронно у всех. Включайте голос, пишите в чат, кидайте реакции.</p></li>
     </ol>

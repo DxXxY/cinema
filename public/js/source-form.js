@@ -27,4 +27,9 @@ export function initSourceForm() {
     e.preventDefault();
     submitMedia($('mediaUrl').value, $('mediaTitle').value);
   });
+  // Link field inside the empty player of a new room.
+  $('emptyForm').addEventListener('submit', e => {
+    e.preventDefault();
+    submitMedia($('emptyUrl').value, '');
+  });
 }

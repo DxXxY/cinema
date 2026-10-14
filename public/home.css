@@ -117,11 +117,6 @@ a.button {
   border-color: #4b4269;
   box-shadow: 0 0 0 1px #a78bfa1f, 0 24px 70px #7949ff26;
 }
-.optional {
-  color: #626981;
-  font-weight: 600;
-  margin-left: 6px;
-}
 .check {
   display: flex;
   align-items: flex-start;
@@ -185,10 +180,9 @@ a.button {
 .form-error {
   color: #ffb7c7 !important;
 }
-#createError {
-  font-size: 11px;
-  line-height: 1.6;
+.create-note {
   margin: 12px 0 0;
+  text-align: center;
 }
 
 /* Recent rooms */

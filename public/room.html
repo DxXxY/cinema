@@ -35,7 +35,10 @@
         <span class="pill"><i class="live-dot"></i><span id="syncStatus">ОЖИДАНИЕ</span></span>
       </div>
       <div id="stage" class="stage">
-        <div id="empty" class="empty"><div class="orb">▶</div><h3>Время выбрать фильм</h3><p>Добавьте ссылку на VK Видео, YouTube, Twitch или прямой видеофайл.</p></div>
+        <div id="empty" class="empty">
+          <div class="orb">▶</div><h3>Время выбрать фильм</h3><p>Вставь ссылку на VK Видео, YouTube, Twitch или файл .mp4 — фильм запустится у всех в комнате.</p>
+          <form id="emptyForm" class="empty-form"><input id="emptyUrl" type="url" placeholder="Ссылка на видео" aria-label="Ссылка на видео" required><button class="button primary" type="submit">Запустить ↗</button></form>
+        </div>
         <video id="video" controls playsinline preload="metadata" hidden></video>
         <iframe id="embed" title="Встроенный видеоплеер" allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowfullscreen hidden></iframe>
         <div id="error" class="error" hidden></div>
