@@ -17,5 +17,5 @@ function applyState(state) {
 initPlayer();
 initSourceForm();
 initChat();
-initVoice();
 initRoom(applyState);
+initVoice(); // after initRoom: on reconnect the room is re-joined before voice re-announces

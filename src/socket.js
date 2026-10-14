@@ -76,8 +76,16 @@ module.exports = function registerSocketHandlers(io) {
     });
 
     // WebRTC signalling: relay only between members of the same room.
-    socket.on('voice:ready', () => {
-      if (socket.data.roomId) socket.to(socket.data.roomId).emit('voice:ready', { id: socket.id });
+    // Without `to` it is announced to the whole room, with `to` only to that peer.
+    socket.on('voice:ready', (data = {}) => {
+      const id = socket.data.roomId;
+      if (!id) return;
+      if (!data?.to) return socket.to(id).emit('voice:ready', { id: socket.id });
+      const target = io.sockets.sockets.get(data.to);
+      if (target?.data.roomId === id) target.emit('voice:ready', { id: socket.id, reply: true });
+    });
+    socket.on('voice:bye', () => {
+      if (socket.data.roomId) socket.to(socket.data.roomId).emit('voice:bye', { id: socket.id });
     });
     for (const event of ['voice:offer', 'voice:answer', 'voice:ice']) {
       socket.on(event, data => {
