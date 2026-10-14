@@ -6,7 +6,7 @@
 
 Требуется Node.js 18 или новее.
 
-1. Распакуйте архив и откройте терминал в папке `together-cinema`.
+1. Откройте терминал в папке `together-cinema`.
 2. Выполните `npm install`.
 3. Выполните `npm start`.
 4. Откройте http://localhost:3000.
@@ -36,13 +36,27 @@
 ```text
 together-cinema/
 ├── package.json
-├── server.js
-├── README.md
+├── server.js             # Express + Socket.IO, сжатие, /health
+├── src/
+│   ├── rooms.js          # хранение комнат в памяти
+│   └── socket.js         # обработчики событий комнаты, чата и голоса
 └── public/
     ├── index.html
     ├── styles.css
-    └── app.js
+    └── js/
+        ├── main.js       # точка входа, связывает модули
+        ├── state.js      # общий socket и состояние комнаты
+        ├── dom.js        # хелперы DOM, подсказки, ленивая загрузка скриптов
+        ├── room.js       # вход в комнату, участники, имя, приглашения
+        ├── player.js     # плеер: прямые файлы, HLS, синхронизация
+        ├── vk.js         # управление VK-плеером
+        ├── embed-url.js  # ссылки VK/YouTube/Twitch → embed
+        ├── source-form.js# форма «Добавить фильм»
+        ├── chat.js       # чат
+        └── voice.js      # голосовая связь WebRTC
 ```
+
+hls.js и VK API загружаются только когда открыт HLS-поток или VK-видео.
 
 
 ### Источники видео
