@@ -42,7 +42,10 @@ function updateControls() {
   $('micMute').disabled = !enabled;
   $('micMute').textContent = muted ? '🔇 Микрофон выключен' : '🎙 Микрофон включён';
   $('micMute').classList.toggle('muted', muted);
+  document.dispatchEvent(new Event('tc:voice')); // the cinema hall mirrors these controls
 }
+
+export const voiceState = () => ({ enabled, muted });
 
 async function enableVoice() {
   if (!navigator.mediaDevices?.getUserMedia || !window.AudioWorkletNode) {
@@ -226,7 +229,7 @@ function refreshMode() {
 // Highlights the avatar of whoever is talking right now.
 function renderSpeaking() {
   const now = Date.now();
-  for (const row of document.querySelectorAll('#people .person[data-id]')) {
+  for (const row of document.querySelectorAll('#people .person[data-id], .hall-tile[data-id]')) {
     row.classList.toggle('speaking', (speakingUntil.get(row.dataset.id) || 0) > now);
   }
 }

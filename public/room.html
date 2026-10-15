@@ -50,6 +50,7 @@
           <button type="button" data-emoji="❤️">❤️</button><button type="button" data-emoji="😂">😂</button><button type="button" data-emoji="😱">😱</button><button type="button" data-emoji="🔥">🔥</button><button type="button" data-emoji="😭">😭</button><button type="button" data-emoji="👏">👏</button>
         </div>
         <div class="toolbar-actions">
+          <button id="hallEnter" class="button quiet hall-enter" type="button" title="Фильм в центре, участники с камерами по бокам">🎬 Кинозал</button>
           <button id="syncBtn" class="button quiet" type="button" title="Перемотать к общему моменту комнаты">⟳ Синхронизироваться</button>
           <button id="miniEnter" class="button quiet desktop-only" type="button" title="Маленькое окно поверх всех окон (Ctrl+Alt+O)">▣ Мини-плеер</button>
           <button id="stageFullscreen" class="button quiet" type="button" title="На весь экран вместе с реакциями" aria-label="На весь экран">⛶</button>
@@ -88,7 +89,7 @@
     <section class="panel room-card">
       <div class="side-heading">
         <div><div class="label">ВАШЕ ПРОСТРАНСТВО</div><h2>Комната</h2></div>
-        <span class="muted small"><i class="live-dot"></i> <span id="roomCount">1</span> В СЕТИ</span>
+        <span class="muted small"><i class="live-dot"></i> <span id="roomCount">1/8</span> В СЕТИ</span>
       </div>
       <div class="room-id"><span class="label">ID КОМНАТЫ</span><div><code id="roomId">...</code><button id="copyId" class="icon-button" title="Копировать ID">▣</button></div></div>
       <div class="lock-row"><button id="lockRoom" class="button quiet" type="button">🔒 Закрыть комнату</button><span id="lockNote" class="lock-note">Зайти может любой, у кого есть ссылка или ID</span></div>
@@ -124,6 +125,18 @@
     <div class="privacy">✦ Без регистрации. Без лишних шагов. Просто кино.</div>
   </aside>
 </main>
+
+<!-- Cinema hall (hall.js): the player above is re-laid out in the middle, webcams go on the sides -->
+<div id="hall" class="hall" hidden>
+  <div id="hallLeft" class="hall-side left"></div>
+  <div id="hallRight" class="hall-side right"></div>
+  <div class="hall-bar">
+    <span class="hall-count" title="Сейчас в комнате / максимум"><i class="live-dot"></i> <span id="hallCount">1/8</span></span>
+    <button id="hallMic" class="button quiet" type="button">🎙 Включить голос</button>
+    <button id="hallCam" class="button quiet" type="button">📷 Включить камеру</button>
+    <button id="hallExit" class="button outline" type="button" title="Вернуться к обычной комнате (Esc)">✕ Выйти из кинозала</button>
+  </div>
+</div>
 
 <footer><span>TOGETHER CINEMA</span><span>СОЗДАНО ДЛЯ СОВМЕСТНЫХ ВЕЧЕРОВ</span></footer>
 </body>

@@ -1,7 +1,8 @@
-const { rooms, clean, randomKey, getRoom, currentTime, snapshot, addMessage, removeUser } = require('./rooms');
+const { rooms, clean, randomKey, getRoom, currentTime, snapshot, addMessage, removeUser, MAX_USERS } = require('./rooms');
 
 const REACTIONS = ['❤️', '😂', '😱', '🔥', '😭', '👏'];
 const MAX_SUBTITLES = 500_000; // characters of WebVTT
+const MAX_CAM_PACKET = 300_000; // one encoded webcam frame (a keyframe is the biggest)
 
 // Allows at most `limit` events per `windowMs` for one socket and key.
 function rateLimited(socket, key, limit, windowMs) {
@@ -35,11 +36,27 @@ module.exports = function registerSocketHandlers(io) {
     broadcastState(socket.data.roomId);
   }
 
+  // Cinema hall: the film in the middle, webcams around it. Webcam frames go
+  // only to members who are in the hall right now.
+  const hallRoom = id => `${id}:hall`;
+  function setHall(socket, on) {
+    const user = memberRoom(socket)?.users.get(socket.id);
+    if (!user) return;
+    socket.data.hall = on;
+    user.hall = on;
+    if (!on) { socket.data.cam = false; user.cam = false; }
+    if (on) socket.join(hallRoom(socket.data.roomId)); else socket.leave(hallRoom(socket.data.roomId));
+    broadcastState(socket.data.roomId);
+  }
+
   function leaveRoom(socket) {
     const id = socket.data.roomId;
     if (!id) return;
     socket.data.voice = false;
+    socket.data.hall = false;
+    socket.data.cam = false;
     socket.leave(voiceRoom(id));
+    socket.leave(hallRoom(id));
     socket.leave(id);
     removeUser(id, socket.id);
     broadcastState(id);
@@ -52,11 +69,12 @@ module.exports = function registerSocketHandlers(io) {
       // A locked room only lets in people who have the invite key.
       const existing = rooms.get(id);
       if (existing?.key && data.key !== existing.key && !existing.users.has(socket.id)) return ack({ ok: false, error: 'locked' });
+      if (existing && existing.users.size >= MAX_USERS && !existing.users.has(socket.id)) return ack({ ok: false, error: 'full', max: MAX_USERS });
       if (socket.data.roomId && socket.data.roomId !== id) leaveRoom(socket);
       const room = getRoom(id);
       socket.data.roomId = id;
       socket.data.name = name;
-      room.users.set(socket.id, { id: socket.id, name, voice: !!socket.data.voice, opus: !!socket.data.voice && !!socket.data.opus });
+      room.users.set(socket.id, { id: socket.id, name, voice: !!socket.data.voice, opus: !!socket.data.voice && !!socket.data.opus, hall: !!socket.data.hall, cam: !!socket.data.cam });
       socket.join(id);
       broadcastState(id);
       ack({ ok: true, roomId: id, state: snapshot(room), messages: room.messages, positions: [...room.positions.values()] });
@@ -168,6 +186,27 @@ module.exports = function registerSocketHandlers(io) {
       const id = socket.data.roomId;
       if (!id || !socket.data.voice || !Buffer.isBuffer(chunk) || chunk.length > 4096) return;
       socket.to(voiceRoom(id)).volatile.emit('voice:data', socket.id, chunk);
+    });
+
+    socket.on('hall:set', (data = {}) => setHall(socket, data?.on === true));
+    socket.on('cam:set', (data = {}) => {
+      const user = memberRoom(socket)?.users.get(socket.id);
+      if (!user || !socket.data.hall) return;
+      socket.data.cam = user.cam = data?.on === true;
+      broadcastState(socket.data.roomId);
+    });
+    socket.on('cam:data', chunk => {
+      const id = socket.data.roomId;
+      if (!id || !socket.data.hall || !socket.data.cam || !Buffer.isBuffer(chunk) || chunk.length > MAX_CAM_PACKET) return;
+      if (rateLimited(socket, 'camTimes', 40, 1000)) return;
+      socket.to(hallRoom(id)).volatile.emit('cam:data', socket.id, chunk);
+    });
+    // A viewer lost frames (or just came in) and asks a camera owner for a keyframe.
+    socket.on('cam:keyreq', (data = {}) => {
+      const room = memberRoom(socket);
+      const target = typeof data?.from === 'string' ? data.from : '';
+      if (!room?.users.has(target) || rateLimited(socket, 'keyTimes', 20, 2000)) return;
+      io.to(target).emit('cam:keyreq');
     });
 
     socket.on('disconnect', () => leaveRoom(socket));

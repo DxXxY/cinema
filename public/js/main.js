@@ -11,11 +11,13 @@ import { initSubtitles, applySubtitles } from './subtitles.js';
 import { initBackground } from './background.js';
 import { rememberRoom } from './recent.js';
 import { initDesktop } from './desktop.js';
+import { initHall, renderHall } from './hall.js';
 
 function applyState(state) {
   store.roomState = stampState(state);
   const users = state.users || [];
-  renderPeople(users);
+  renderPeople(users, state.maxUsers);
+  renderHall(state);
   renderTimecodes();
   renderRoomLock(state);
   applyPlayerState(state);
@@ -49,5 +51,6 @@ initReactions();
 initSubtitles();
 initRoom(applyState, onJoined);
 initVoice(); // after initRoom: on reconnect the room is re-joined before voice re-announces
+initHall(); // same for the cinema hall
 initBackground();
 initDesktop();

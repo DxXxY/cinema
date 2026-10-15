@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const rooms = new Map();
 const EMPTY_ROOM_TTL = 10 * 60 * 1000; // keep an empty room (video, chat) for 10 minutes
 const MAX_MESSAGES = 50;
+const MAX_USERS = 8; // people in one room at once
 
 const clean = (v, max = 500) => String(v ?? '').replace(/[<>]/g, '').trim().slice(0, max);
 const randomKey = () => crypto.randomBytes(6).toString('base64url');
@@ -28,7 +29,7 @@ function currentTime(room) {
 // Sent only to room members, so it may include the invite key.
 function snapshot(room) {
   return {
-    users: [...room.users.values()], media: room.media, playing: room.playing, time: currentTime(room), updatedAt: Date.now(),
+    users: [...room.users.values()], maxUsers: MAX_USERS, media: room.media, playing: room.playing, time: currentTime(room), updatedAt: Date.now(),
     locked: !!room.key, key: room.key,
     subtitles: room.subtitles && { id: room.subtitles.id, name: room.subtitles.name },
   };
@@ -55,4 +56,4 @@ function removeUser(id, socketId) {
   room.deleteTimer.unref?.();
 }
 
-module.exports = { rooms, clean, randomKey, getRoom, currentTime, snapshot, addMessage, removeUser };
+module.exports = { rooms, clean, randomKey, getRoom, currentTime, snapshot, addMessage, removeUser, MAX_USERS };

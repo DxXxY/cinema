@@ -1234,3 +1234,227 @@ body.mini-mode::after {
     font-size: 12px;
   }
 }
+
+/* Cinema hall (hall.js): the film in the middle, webcams on both sides.
+   Like the mini player, only the layout changes — the player is not moved. */
+.hall {
+  display: none;
+}
+.hall-mode:not(.mini-mode) {
+  overflow: hidden;
+  --tile-w: clamp(150px, 17vw, 280px);
+}
+.hall-mode:not(.mini-mode) .topbar,
+.hall-mode:not(.mini-mode) .hero,
+.hall-mode:not(.mini-mode) .side-column,
+.hall-mode:not(.mini-mode) .source-card,
+.hall-mode:not(.mini-mode) .invite-card,
+.hall-mode:not(.mini-mode) .player-footer,
+.hall-mode:not(.mini-mode) .hall-enter,
+.hall-mode:not(.mini-mode) footer {
+  display: none !important;
+}
+.hall-mode:not(.mini-mode) .layout {
+  display: block;
+  max-width: none;
+  padding: 0;
+}
+.hall-mode:not(.mini-mode) .player-card {
+  position: fixed;
+  z-index: 5;
+  top: 14px;
+  bottom: 78px;
+  left: calc(var(--tile-w) + 28px);
+  right: calc(var(--tile-w) + 28px);
+  display: flex;
+  flex-direction: column;
+}
+.hall-mode:not(.mini-mode) .player-header {
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+.hall-mode:not(.mini-mode) .stage {
+  flex: 1;
+  min-height: 0;
+  aspect-ratio: auto;
+}
+.hall-mode:not(.mini-mode) .player-toolbar {
+  padding-bottom: 10px;
+}
+.hall-mode:not(.mini-mode) .hall {
+  display: block;
+}
+.hall-side {
+  position: fixed;
+  z-index: 4;
+  top: 14px;
+  bottom: 78px;
+  width: var(--tile-w);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+}
+.hall-side.left {
+  left: 14px;
+}
+.hall-side.right {
+  right: 14px;
+}
+.hall-tile {
+  position: relative;
+  flex: 0 1 auto;
+  width: 100%;
+  aspect-ratio: 4/3;
+  max-height: calc((100vh - 92px - 30px) / 4);
+  border-radius: 14px;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 40%, #241f3a, #11131f 70%);
+  border: 1px solid var(--line);
+  transition: border-color 0.15s, box-shadow 0.15s, opacity 0.2s;
+}
+.hall-tile.speaking {
+  border-color: #68e5ba;
+  box-shadow: 0 0 0 3px #68e5ba40, 0 0 18px #68e5ba55;
+}
+.hall-tile.away {
+  opacity: 0.5;
+}
+.hall-cam {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #05060a;
+  display: none;
+}
+.hall-tile.cam-remote canvas.hall-cam,
+.hall-tile.cam-self video.hall-cam {
+  display: block;
+}
+.hall-tile video.hall-cam {
+  transform: scaleX(-1); /* a mirror, like every video call shows you to yourself */
+}
+.hall-avatar {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  translate: -50% -50%;
+  width: 34%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #3a3160, #252c40);
+  border: 1px solid #4b4269;
+  color: #e4dcff;
+  font: 800 clamp(16px, 2.4vw, 34px) Manrope, sans-serif;
+}
+.hall-tile.cam-remote .hall-avatar,
+.hall-tile.cam-self .hall-avatar {
+  display: none;
+}
+.hall-name {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  max-width: calc(100% - 16px);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 7px;
+  background: #0b0c14c7;
+  font-size: 11px;
+  font-weight: 600;
+}
+.hall-name span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hall-mic {
+  font-style: normal;
+  font-size: 10px;
+}
+.hall-mic[hidden] {
+  display: none;
+}
+.hall-bar {
+  position: fixed;
+  z-index: 6;
+  left: 50%;
+  bottom: 14px;
+  translate: -50% 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: linear-gradient(145deg, #171a2bf2, #10121df2);
+  box-shadow: 0 14px 40px #00000080;
+  backdrop-filter: blur(12px);
+}
+.hall-count {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px 0 6px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+#hallMic.muted {
+  border-color: #f472b6aa;
+  color: #f9c4e2;
+}
+#hallCam.on {
+  border-color: #68e5ba88;
+  color: #b9f5df;
+}
+#hallCam:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Phones and narrow windows: film on top, tiles in a grid below, bar at the bottom. */
+@media (max-width: 760px) {
+  .hall-mode:not(.mini-mode) {
+    overflow: auto;
+  }
+  .hall-mode:not(.mini-mode) .player-card {
+    position: relative;
+    inset: auto;
+    margin: 0;
+    border-radius: 0;
+  }
+  .hall-mode:not(.mini-mode) .stage {
+    flex: none;
+    aspect-ratio: 16/9;
+  }
+  .hall-mode:not(.mini-mode) .hall {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 10px 10px 90px;
+  }
+  .hall-side {
+    display: contents;
+  }
+  .hall-tile {
+    max-height: none;
+  }
+  .hall-bar {
+    width: calc(100% - 20px);
+    justify-content: center;
+    flex-wrap: wrap;
+    bottom: 10px;
+  }
+  .hall-bar .button {
+    padding: 10px 9px;
+    font-size: 10px;
+  }
+}

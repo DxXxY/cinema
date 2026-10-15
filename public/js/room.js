@@ -9,6 +9,7 @@ export function initRoom(onState, onJoined) {
 
   const join = () => socket.emit('room:join', { roomId: store.roomId, key: store.roomKey, name: store.displayName }, result => {
     if (result?.error === 'locked') return showLocked();
+    if (result?.error === 'full') return showFull(result.max);
     if (!result?.ok) return;
     store.joined = true;
     store.roomId = result.roomId;
@@ -46,6 +47,14 @@ function showLocked() {
   showPopup({ title: 'Комната закрыта', detail: 'Нужна ссылка-приглашение от участников комнаты', error: true });
 }
 
+function showFull(max = 8) {
+  setHint('Комната заполнена');
+  $('empty').querySelector('h3').textContent = `Комната заполнена (${max}/${max}) 🍿`;
+  $('empty').querySelector('p').textContent = `В одной комнате может быть до ${max} человек. Подожди, пока кто-нибудь выйдет, и обнови страницу — или создай новую комнату.`;
+  $('emptyForm').hidden = true;
+  showPopup({ title: 'Комната заполнена', detail: `Мест нет: уже ${max} из ${max}`, error: true });
+}
+
 // Lock button and the invite key in the address bar.
 export function renderRoomLock(state) {
   store.roomKey = state.key || '';
@@ -55,8 +64,8 @@ export function renderRoomLock(state) {
   $('lockNote').textContent = state.locked ? 'Зайти можно только по ссылке-приглашению' : 'Зайти может любой, у кого есть ссылка или ID';
 }
 
-export function renderPeople(users) {
-  $('roomCount').textContent = users.length;
+export function renderPeople(users, maxUsers = 8) {
+  $('roomCount').textContent = `${users.length}/${maxUsers}`;
   const list = $('people');
   list.replaceChildren();
   if (!users.length) {
